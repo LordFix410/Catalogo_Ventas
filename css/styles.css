@@ -1,0 +1,542 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
+/* PALETA OFICIAL */
+
+:root {
+    --chiquis-primary: #EC4899;
+    --chiquis-primary-dark: #BE185D;
+    --chiquis-secondary: #8B5CF6;
+    --chiquis-background: #F8FAFC;
+    --chiquis-surface: #FFFFFF;
+    --chiquis-sidebar: #20242B;
+    --chiquis-sidebar-light: #293548;
+    --chiquis-text: #1F2937;
+    --chiquis-text-secondary: #6B7280;
+    --chiquis-border: #E5E7EB;
+    --chiquis-success: #10B981;
+    --chiquis-warning: #F59E0B;
+    --chiquis-danger: #EF4444;
+    --chiquis-blue: #3B82F6;
+}
+
+/* GENERAL */
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+    font-family: 'Nunito', sans-serif !important;
+}
+
+body {
+    background: var(--chiquis-background);
+    color: var(--chiquis-text);
+}
+
+/* SIDEBAR */
+
+.sidebar-chiquis {
+    background: linear-gradient(
+        180deg,
+        #BE185D 0%,
+        #DB2777 45%,
+        #9333EA 100%
+    ) !important;
+}
+
+/* MARCA DEL SIDEBAR */
+
+.sidebar-chiquis .sidebar-brand {
+    background: rgba(126, 20, 75, 0.28) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* TEXTO DEL MENÚ */
+
+.sidebar-chiquis .nav-link {
+    color: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* ICONOS */
+
+.sidebar-chiquis .nav-link .nav-icon {
+    color: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* HOVER */
+
+.sidebar-chiquis .nav-link:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #FFFFFF !important;
+}
+
+.sidebar-chiquis .nav-link:hover .nav-icon {
+    color: #FFFFFF !important;
+}
+
+/* OPCIÓN ACTIVA */
+
+.sidebar-chiquis .nav-link.active {
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #FFFFFF !important;
+    box-shadow: none;
+}
+
+.sidebar-chiquis .nav-link.active .nav-icon {
+    color: #FFFFFF !important;
+}
+
+/* SEPARADOR */
+
+.sidebar-chiquis .nav-header {
+    color: rgba(255, 255, 255, 0.70) !important;
+}
+
+/* NAVBAR */
+
+.app-header {
+    min-height: 68px;
+    background: #FFFFFF !important;
+    border-bottom: 1px solid var(--chiquis-border);
+    box-shadow: 0 1px 3px rgba(31, 41, 55, 0.03);
+}
+
+.app-header .nav-link {
+    color: var(--chiquis-text-secondary);
+}
+
+.app-header .nav-link:hover {
+    color: var(--chiquis-primary);
+}
+
+/* ÁREA PRINCIPAL */
+
+.app-main {
+    background: var(--chiquis-background) !important;
+}
+
+.app-content-header {
+    padding-top: 28px;
+    padding-bottom: 20px;
+}
+
+.app-content {
+    padding-bottom: 30px;
+}
+
+/* ENCABEZADO DE PÁGINA */
+
+.page-eyebrow {
+    display: block;
+    color: var(--chiquis-text-secondary);
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 4px;
+}
+
+.page-title {
+    color: var(--chiquis-text);
+    margin: 0;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 1.05;
+    font-weight: 900;
+}
+
+.page-description {
+    color: var(--chiquis-text-secondary);
+    margin: 8px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+/* BREADCRUMB */
+
+.breadcrumb {
+    --bs-breadcrumb-divider-color: #9CA3AF;
+}
+
+.breadcrumb-item {
+    color: var(--chiquis-text-secondary);
+    font-weight: 600;
+}
+
+.breadcrumb-item.active {
+    color: var(--chiquis-primary);
+}
+
+/* TARJETAS DE ESTADÍSTICAS */
+
+.dashboard-stat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-height: 126px;
+    padding: 20px;
+    color: var(--chiquis-text);
+    text-decoration: none;
+    border: 1px solid rgba(31, 41, 55, 0.04);
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(31, 41, 55, 0.07);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-stat:hover {
+    color: var(--chiquis-text);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(31, 41, 55, 0.12);
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 58px;
+    height: 58px;
+    border-radius: 14px;
+    font-size: 27px;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.stat-title {
+    color: var(--chiquis-text);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.stat-number {
+    color: var(--chiquis-text);
+    font-size: 29px;
+    line-height: 1.1;
+    font-weight: 900;
+}
+
+.stat-description {
+    color: var(--chiquis-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stat-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    border-radius: 50%;
+}
+
+/* TARJETA CLIENTES */
+
+.stat-clientes {
+    background: linear-gradient(135deg, #FFF8FC 0%, #FCE7F3 100%);
+}
+
+.stat-clientes .stat-icon,
+.stat-clientes .stat-arrow {
+    background: #FBCFE8;
+    color: #DB2777;
+}
+
+/* TARJETA PRODUCTOS */
+
+.stat-productos {
+    background: linear-gradient(135deg, #FBFAFF 0%, #EDE9FE 100%);
+}
+
+.stat-productos .stat-icon,
+.stat-productos .stat-arrow {
+    background: #DDD6FE;
+    color: #7C3AED;
+}
+
+/* TARJETA PEDIDOS */
+
+.stat-pedidos {
+    background: linear-gradient(135deg, #F8FCFF 0%, #E0F2FE 100%);
+}
+
+.stat-pedidos .stat-icon,
+.stat-pedidos .stat-arrow {
+    background: #DBEAFE;
+    color: #0284C7;
+}
+
+/* TARJETA SEGUIMIENTO */
+
+.stat-seguimiento {
+    background: linear-gradient(135deg, #F8FFFC 0%, #D1FAE5 100%);
+}
+
+.stat-seguimiento .stat-icon,
+.stat-seguimiento .stat-arrow {
+    background: #A7F3D0;
+    color: #059669;
+}
+
+/* TARJETAS GENERALES */
+
+.dashboard-card {
+    height: 100%;
+    padding: 26px;
+    background: var(--chiquis-surface);
+    border: 1px solid var(--chiquis-border);
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(31, 41, 55, 0.07);
+}
+
+/* TARJETA DE BIENVENIDA */
+
+.welcome-card {
+    position: relative;
+    overflow: hidden;
+    border-left: 5px solid var(--chiquis-primary);
+}
+
+.welcome-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.welcome-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 82px;
+    height: 82px;
+    color: var(--chiquis-text);
+    background: linear-gradient(135deg, #FCE7F3, #FFFFFF);
+    border-radius: 18px;
+    font-size: 48px;
+}
+
+.welcome-logo i {
+    color: var(--chiquis-primary);
+}
+
+.welcome-header h2 {
+    color: var(--chiquis-text);
+    margin: 0;
+    font-size: 27px;
+    font-weight: 900;
+}
+
+.welcome-header p {
+    color: var(--chiquis-text-secondary);
+    margin: 3px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.welcome-divider {
+    height: 1px;
+    margin: 20px 0;
+    background: var(--chiquis-border);
+}
+
+.welcome-body p {
+    max-width: 700px;
+    color: var(--chiquis-text-secondary);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* BOTÓN PRINCIPAL */
+
+.btn-chiquis {
+    padding: 11px 24px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #EC4899, #F43F8E);
+    border: none;
+    border-radius: 9px;
+    font-weight: 800;
+    box-shadow: 0 5px 14px rgba(236, 72, 153, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.btn-chiquis:hover {
+    color: #FFFFFF;
+    background: var(--chiquis-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(236, 72, 153, 0.30);
+}
+
+/* ACCESOS RÁPIDOS */
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    color: var(--chiquis-text);
+    font-size: 19px;
+    font-weight: 900;
+}
+
+.section-title i {
+    color: var(--chiquis-primary);
+}
+
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 74px;
+    padding: 15px;
+    color: var(--chiquis-text);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 800;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-link:hover {
+    color: var(--chiquis-text);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(31, 41, 55, 0.07);
+}
+
+.quick-link i {
+    font-size: 22px;
+}
+
+.quick-clientes {
+    background: #FCE7F3;
+}
+
+.quick-clientes i {
+    color: #DB2777;
+}
+
+.quick-productos {
+    background: #EDE9FE;
+}
+
+.quick-productos i {
+    color: #7C3AED;
+}
+
+.quick-pedidos {
+    background: #E0F2FE;
+}
+
+.quick-pedidos i {
+    color: #0284C7;
+}
+
+.quick-seguimiento {
+    background: #D1FAE5;
+}
+
+.quick-seguimiento i {
+    color: #059669;
+}
+
+/* COMPONENTES GENERALES PARA LOS DEMÁS MÓDULOS */
+
+.card {
+    background: #FFFFFF;
+    border: 1px solid var(--chiquis-border);
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(31, 41, 55, 0.06);
+}
+
+.card-header {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--chiquis-border);
+    border-radius: 14px 14px 0 0 !important;
+}
+
+.card-title {
+    color: var(--chiquis-text);
+    font-weight: 800;
+}
+
+.btn-primary {
+    background: var(--chiquis-primary);
+    border-color: var(--chiquis-primary);
+    font-weight: 700;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--chiquis-primary-dark);
+    border-color: var(--chiquis-primary-dark);
+}
+
+.form-control,
+.form-select {
+    border-color: #D1D5DB;
+    border-radius: 9px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--chiquis-primary);
+    box-shadow: 0 0 0 0.2rem rgba(236, 72, 153, 0.15);
+}
+
+.table {
+    --bs-table-bg: transparent;
+}
+
+.table thead th {
+    color: var(--chiquis-text);
+    background: #F9FAFB;
+    font-weight: 800;
+}
+
+/* FOOTER */
+
+.app-footer {
+    background: #FFFFFF !important;
+    color: var(--chiquis-text-secondary);
+    border-top: 1px solid var(--chiquis-border);
+    font-weight: 600;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 767px) {
+    .page-description {
+        font-size: 15px;
+    }
+
+    .quick-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome-header {
+        align-items: flex-start;
+    }
+
+    .welcome-logo {
+        width: 65px;
+        height: 65px;
+        font-size: 38px;
+    }
+
+    .welcome-header h2 {
+        font-size: 22px;
+    }
+}
