@@ -29,9 +29,10 @@ include '../includes/navbar.php';
 include '../includes/sidebar.php';
 ?>
 
+<!-- Insignias del módulo usando la paleta oficial -->
 <style>
-  .badge-minorista { background-color: #FCE7F3; color: #BE185D; }
-  .badge-mayorista { background-color: #EDE9FE; color: #6D28D9; }
+  .badge-minorista { background-color: #FCE7F3; color: #BE185D; } /* Rosa Pastel / Rosa Profundo */
+  .badge-mayorista { background-color: #8B5CF6; color: #FFFFFF; } /* Morado */
   .dato-cliente { color: #6B7280; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
   .valor-cliente { color: #1F2937; font-weight: 600; }
 </style>

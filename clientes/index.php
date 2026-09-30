@@ -32,12 +32,13 @@ include '../includes/navbar.php';
 include '../includes/sidebar.php';
 ?>
 
+<!-- Insignias del módulo usando la paleta oficial -->
 <style>
-  .badge-minorista { background-color: #FCE7F3; color: #BE185D; }
-  .badge-mayorista { background-color: #EDE9FE; color: #6D28D9; }
-  .fila-inactiva td { color: #9CA3AF; }
-  .stat-inactivos { background: linear-gradient(135deg, #FAFAFA 0%, #F3F4F6 100%); }
-  .stat-inactivos .stat-icon { background: #E5E7EB; color: #4B5563; }
+  .badge-minorista { background-color: #FCE7F3; color: #BE185D; } /* Rosa Pastel / Rosa Profundo */
+  .badge-mayorista { background-color: #8B5CF6; color: #FFFFFF; } /* Morado */
+  .fila-inactiva td { color: #6B7280; }                            /* Gris Pizarra */
+  .stat-inactivos { background: #F8FAFC; }                          /* Gris Hielo */
+  .stat-inactivos .stat-icon { background: #E5E7EB; color: #6B7280; }
 </style>
 
 <main class="app-main">
