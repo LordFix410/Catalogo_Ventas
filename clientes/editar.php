@@ -1,6 +1,4 @@
 <?php
-// clientes/editar.php
-// 1.1.3 Edición de clientes
 $titulo = "Editar Cliente";
 
 require_once 'funciones.php';
@@ -51,7 +49,6 @@ include '../includes/sidebar.php';
 
 <main class="app-main">
 
-    <!-- ENCABEZADO -->
     <div class="app-content-header">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -76,7 +73,6 @@ include '../includes/sidebar.php';
         </div>
     </div>
 
-    <!-- CONTENIDO -->
     <div class="app-content">
         <div class="container-fluid">
 

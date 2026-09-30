@@ -1,13 +1,9 @@
 <?php
-// clientes/funciones.php
-// Funciones compartidas del Módulo de Clientes (1.1)
 
 require_once __DIR__ . '/../config/database.php';
 
-// Tipos de cliente permitidos (coinciden con el ENUM de la tabla clientes)
 const TIPOS_CLIENTE = ['Minorista', 'Mayorista'];
 
-// Ejecuta un procedimiento almacenado con parámetros seguros y devuelve las filas
 function ejecutarProcedimiento($conexion, $sql, $tipos = '', $parametros = []) {
     $stmt = mysqli_prepare($conexion, $sql);
 
@@ -32,7 +28,7 @@ function ejecutarProcedimiento($conexion, $sql, $tipos = '', $parametros = []) {
         mysqli_free_result($resultado);
     }
 
-    // Limpia los resultados extra que devuelven los Stored Procedures
+    // Liberar los resultados extra de los SP
     while (mysqli_stmt_more_results($stmt) && mysqli_stmt_next_result($stmt)) {
         if ($extra = mysqli_stmt_get_result($stmt)) {
             mysqli_free_result($extra);
@@ -43,7 +39,7 @@ function ejecutarProcedimiento($conexion, $sql, $tipos = '', $parametros = []) {
     return $filas;
 }
 
-// Cuenta caracteres UTF-8 (tildes, ñ) sin depender de la extensión mbstring
+// Alternativa a mb_strlen, no todos tienen mbstring
 function longitud($texto) {
     return preg_match_all('/./us', (string)$texto);
 }
@@ -53,7 +49,6 @@ function obtenerCliente($conexion, $id_cliente) {
     return $filas[0] ?? null;
 }
 
-// Limpia y valida los datos del formulario. Devuelve [datos, errores]
 function validarCliente($entrada) {
     $datos = [
         'nombre'       => trim($entrada['nombre'] ?? ''),
@@ -94,7 +89,6 @@ function validarCliente($entrada) {
         $errores['tipo_cliente'] = 'Seleccione un tipo de cliente válido.';
     }
 
-    // Los campos opcionales vacíos se guardan como NULL
     $datos['telefono']  = $datos['telefono'] !== '' ? $datos['telefono'] : null;
     $datos['direccion'] = $datos['direccion'] !== '' ? $datos['direccion'] : null;
 

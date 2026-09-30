@@ -1,6 +1,4 @@
 <?php
-// clientes/index.php
-// 1.1.2 Consulta de clientes / 1.1.5 Clasificación minorista y mayorista
 $titulo = "Clientes";
 
 require_once 'funciones.php';
@@ -8,7 +6,6 @@ require_once 'funciones.php';
 $conexion = Database::getConnection();
 $clientes = ejecutarProcedimiento($conexion, "CALL sp_cliente_listar()");
 
-// Resumen por clasificación (solo clientes activos)
 $activos     = array_filter($clientes, fn($c) => $c['activo']);
 $minoristas  = count(array_filter($activos, fn($c) => $c['tipo_cliente'] === 'Minorista'));
 $mayoristas  = count(array_filter($activos, fn($c) => $c['tipo_cliente'] === 'Mayorista'));
@@ -32,18 +29,16 @@ include '../includes/navbar.php';
 include '../includes/sidebar.php';
 ?>
 
-<!-- Insignias del módulo usando la paleta oficial -->
 <style>
-  .badge-minorista { background-color: #FCE7F3; color: #BE185D; } /* Rosa Pastel / Rosa Profundo */
-  .badge-mayorista { background-color: #8B5CF6; color: #FFFFFF; } /* Morado */
-  .fila-inactiva td { color: #6B7280; }                            /* Gris Pizarra */
-  .stat-inactivos { background: #F8FAFC; }                          /* Gris Hielo */
+  .badge-minorista { background-color: #FCE7F3; color: #BE185D; }
+  .badge-mayorista { background-color: #8B5CF6; color: #FFFFFF; }
+  .fila-inactiva td { color: #6B7280; }
+  .stat-inactivos { background: #F8FAFC; }
   .stat-inactivos .stat-icon { background: #E5E7EB; color: #6B7280; }
 </style>
 
 <main class="app-main">
 
-    <!-- ENCABEZADO -->
     <div class="app-content-header">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -66,7 +61,6 @@ include '../includes/sidebar.php';
         </div>
     </div>
 
-    <!-- CONTENIDO -->
     <div class="app-content">
         <div class="container-fluid">
 
@@ -84,7 +78,6 @@ include '../includes/sidebar.php';
                 </div>
             <?php endif; ?>
 
-            <!-- RESUMEN -->
             <div class="row g-3 mb-4">
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="dashboard-stat stat-clientes">
@@ -128,7 +121,6 @@ include '../includes/sidebar.php';
                 </div>
             </div>
 
-            <!-- TARJETA PRINCIPAL -->
             <div class="dashboard-card mb-4">
 
                 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
@@ -140,7 +132,6 @@ include '../includes/sidebar.php';
                     </a>
                 </div>
 
-                <!-- FILTROS -->
                 <div class="row g-2 mb-3">
                     <div class="col-12 col-md-6">
                         <div class="input-group">
@@ -165,7 +156,6 @@ include '../includes/sidebar.php';
                     </div>
                 </div>
 
-                <!-- TABLA RESPONSIVA -->
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0" id="tablaClientes">
                         <thead style="background-color: #FCE7F3; color: #1F2937;">
@@ -259,7 +249,6 @@ include '../includes/sidebar.php';
 
 </main>
 
-<!-- MODAL DESACTIVAR / REACTIVAR -->
 <div class="modal fade" id="modalEstadoCliente" tabindex="-1" aria-labelledby="modalEstadoClienteLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -291,7 +280,6 @@ include '../includes/sidebar.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Pasar datos al modal según la acción
     document.querySelectorAll('.btn-modal-estado').forEach(btn => {
         btn.addEventListener('click', function () {
             const accion = this.dataset.accion;
@@ -314,7 +302,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Búsqueda y filtros en tiempo real
     const inputBuscar  = document.getElementById('filtroBuscar');
     const filtroTipo   = document.getElementById('filtroTipo');
     const filtroEstado = document.getElementById('filtroEstado');

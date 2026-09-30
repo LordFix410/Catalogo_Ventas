@@ -1,7 +1,5 @@
 <?php
-// clientes/eliminar.php
-// 1.1.4 Eliminación / administración de clientes
-// Baja lógica: el cliente se desactiva para conservar su historial de pedidos
+// Baja lógica para no romper los pedidos existentes
 require_once 'funciones.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

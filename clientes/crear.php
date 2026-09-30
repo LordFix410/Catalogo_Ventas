@@ -1,6 +1,4 @@
 <?php
-// clientes/crear.php
-// 1.1.1 Registro de clientes
 $titulo = "Nuevo Cliente";
 
 require_once 'funciones.php';
@@ -16,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conexion = Database::getConnection();
 
-            // id_usuario queda en NULL: la cuenta de acceso al portal es opcional
+            // Sin cuenta en el portal
             ejecutarProcedimiento(
                 $conexion,
                 "CALL sp_cliente_insertar(?, ?, ?, ?, ?, ?)",
@@ -39,7 +37,6 @@ include '../includes/sidebar.php';
 
 <main class="app-main">
 
-    <!-- ENCABEZADO -->
     <div class="app-content-header">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -63,7 +60,6 @@ include '../includes/sidebar.php';
         </div>
     </div>
 
-    <!-- CONTENIDO -->
     <div class="app-content">
         <div class="container-fluid">
 

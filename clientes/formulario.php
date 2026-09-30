@@ -1,7 +1,5 @@
 <?php
-// clientes/formulario.php
-// Campos del formulario de cliente, usado por crear.php y editar.php
-// Variables esperadas: $cliente (array), $errores (array), $textoBoton (string)
+// Requiere $cliente, $errores y $textoBoton
 ?>
 
 <form method="POST" novalidate>
