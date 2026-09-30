@@ -43,6 +43,11 @@ function ejecutarProcedimiento($conexion, $sql, $tipos = '', $parametros = []) {
     return $filas;
 }
 
+// Cuenta caracteres UTF-8 (tildes, ñ) sin depender de la extensión mbstring
+function longitud($texto) {
+    return preg_match_all('/./us', (string)$texto);
+}
+
 function obtenerCliente($conexion, $id_cliente) {
     $filas = ejecutarProcedimiento($conexion, "CALL sp_cliente_obtener(?)", 'i', [$id_cliente]);
     return $filas[0] ?? null;
@@ -62,13 +67,13 @@ function validarCliente($entrada) {
 
     if ($datos['nombre'] === '') {
         $errores['nombre'] = 'El nombre es obligatorio.';
-    } elseif (mb_strlen($datos['nombre']) > 100) {
+    } elseif (longitud($datos['nombre']) > 100) {
         $errores['nombre'] = 'El nombre no puede superar los 100 caracteres.';
     }
 
     if ($datos['apellido'] === '') {
         $errores['apellido'] = 'El apellido es obligatorio.';
-    } elseif (mb_strlen($datos['apellido']) > 100) {
+    } elseif (longitud($datos['apellido']) > 100) {
         $errores['apellido'] = 'El apellido no puede superar los 100 caracteres.';
     }
 
@@ -76,12 +81,12 @@ function validarCliente($entrada) {
         $soloDigitos = preg_replace('/\D/', '', $datos['telefono']);
         if (!preg_match('/^\+?[0-9\s\-()]+$/', $datos['telefono'])
             || strlen($soloDigitos) < 8
-            || mb_strlen($datos['telefono']) > 20) {
+            || longitud($datos['telefono']) > 20) {
             $errores['telefono'] = 'Ingrese un teléfono válido (mínimo 8 dígitos).';
         }
     }
 
-    if (mb_strlen($datos['direccion']) > 255) {
+    if (longitud($datos['direccion']) > 255) {
         $errores['direccion'] = 'La dirección no puede superar los 255 caracteres.';
     }
 

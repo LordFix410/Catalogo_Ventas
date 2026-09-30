@@ -173,7 +173,7 @@ include '../includes/sidebar.php';
                                 <th>Código</th>
                                 <th>Cliente</th>
                                 <th>Teléfono</th>
-                                <th>Dirección</th>
+                                <th class="d-none d-xl-table-cell">Dirección</th>
                                 <th>Tipo</th>
                                 <th>Estado</th>
                                 <th class="text-center">Acciones</th>
@@ -185,15 +185,15 @@ include '../includes/sidebar.php';
                                 <tr class="fila-cliente <?= $c['activo'] ? '' : 'fila-inactiva' ?>"
                                     data-tipo="<?= escapar($c['tipo_cliente']) ?>"
                                     data-activo="<?= $c['activo'] ? '1' : '0' ?>">
-                                    <td><strong>#<?= str_pad($c['id_cliente'], 5, '0', STR_PAD_LEFT) ?></strong></td>
+                                    <td class="text-nowrap"><strong>#<?= str_pad($c['id_cliente'], 5, '0', STR_PAD_LEFT) ?></strong></td>
                                     <td>
                                         <div class="fw-bold"><?= escapar($nombreCompleto) ?></div>
                                         <?php if (!empty($c['correo'])): ?>
                                             <small class="text-muted"><?= escapar($c['correo']) ?></small>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= escapar($c['telefono'] ?: '—') ?></td>
-                                    <td class="text-truncate" style="max-width: 240px;" title="<?= escapar($c['direccion']) ?>">
+                                    <td class="text-nowrap"><?= escapar($c['telefono'] ?: '—') ?></td>
+                                    <td class="text-truncate d-none d-xl-table-cell" style="max-width: 240px;" title="<?= escapar($c['direccion']) ?>">
                                         <?= escapar($c['direccion'] ?: '—') ?>
                                     </td>
                                     <td>
