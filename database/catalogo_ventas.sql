@@ -114,8 +114,6 @@ CREATE TABLE estados_pedido(
     orden INT NOT NULL UNIQUE
 );
 
-
-
 #TABLA DE SEGUIMIENTO 
 CREATE TABLE seguimiento_pedido(
     id_seguimiento INT AUTO_INCREMENT PRIMARY KEY,
@@ -744,7 +742,7 @@ END //
 
 DELIMITER;
 
-
+DROP PROCEDURE IF EXISTS sp_dashboard_resumen;
 DELIMITER $$
 CREATE PROCEDURE sp_dashboard_resumen()
 BEGIN
@@ -765,6 +763,66 @@ BEGIN
          FROM seguimiento_pedido) AS total_seguimiento;
 
 END$$
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS sp_cliente_por_usuario;
+DELIMITER //
+CREATE PROCEDURE sp_cliente_por_usuario(
+    IN p_id_usuario INT
+)
+BEGIN
+    SELECT
+        c.id_cliente,
+        c.id_usuario,
+        c.nombre,
+        c.apellido,
+        c.telefono,
+        c.direccion,
+        c.tipo_cliente,
+        c.fecha_registro,
+        c.activo
+    FROM clientes c
+    WHERE c.id_usuario = p_id_usuario
+      AND c.activo = 1
+    LIMIT 1;
+END //
+
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_portal_seguimiento_cliente;
+
+DELIMITER //
+
+CREATE PROCEDURE sp_portal_seguimiento_cliente(
+    IN p_id_usuario INT
+)
+BEGIN
+    SELECT
+        p.id_pedido,
+        p.fecha_pedido,
+        p.total,
+        e.id_estado,
+        e.nombre AS estado,
+        s.fecha_hora AS ultima_actualizacion
+    FROM pedidos p
+    INNER JOIN clientes c
+        ON p.id_cliente = c.id_cliente
+    LEFT JOIN seguimiento_pedido s
+        ON s.id_seguimiento = (
+            SELECT s2.id_seguimiento
+            FROM seguimiento_pedido s2
+            WHERE s2.id_pedido = p.id_pedido
+            ORDER BY s2.fecha_hora DESC,
+                     s2.id_seguimiento DESC
+            LIMIT 1
+        )
+    LEFT JOIN estados_pedido e
+        ON s.id_estado = e.id_estado
+    WHERE c.id_usuario = p_id_usuario
+    ORDER BY p.fecha_pedido DESC;
+END //
+
 DELIMITER ;
 
 SHOW PROCEDURE STATUS WHERE Db = 'catalogo_ventas';
