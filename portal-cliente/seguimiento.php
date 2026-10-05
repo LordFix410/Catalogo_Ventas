@@ -1,5 +1,9 @@
 <?php
 
+require_once '../includes/auth.php';
+
+requiereRol(['Cliente']);
+
 require_once '../config/database.php';
 
 $conexion = Database::getConnection();
@@ -27,14 +31,16 @@ require_once '../includes/sidebar.php';
             <div class="row">
 
                 <div class="col-sm-6">
-                    <h3 class="mb-0">Seguimiento de Pedidos</h3>
+                    <h3 class="mb-0">
+                        Bienvenido, <?= htmlspecialchars($_SESSION['nombre'] ?? 'Cliente') ?>
+                    </h3>
                 </div>
 
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-end">
 
                         <li class="breadcrumb-item">
-                            <a href="../index.php">Inicio</a>
+                            <a href="index.php">Inicio</a>
                         </li>
 
                         <li class="breadcrumb-item">
