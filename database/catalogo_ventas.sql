@@ -25,6 +25,9 @@ CREATE TABLE usuarios(
     CONSTRAINT fk_usuarios_roles FOREIGN KEY(id_rol) REFERENCES roles(id_rol)
 );
 
+#INSERT INTO usuarios(id_rol, nombre, correo, password, activo)
+#values(1, 'admin', 'admin@gmail.com', '$2y$10$CJj/6hEf9HAu9o4P9Emw1etqAxbiIiEvjAOPujSYYwrerje2MnoDO', true);
+#select * from usuarios;
 
 #TABLA DE CLIENTES 
 CREATE TABLE clientes(
@@ -739,7 +742,29 @@ BEGIN
     ORDER BY p.fecha_pedido DESC;
 END //
 
-DELIMITER ;
+DELIMITER;
 
+
+DELIMITER $$
+CREATE PROCEDURE sp_dashboard_resumen()
+BEGIN
+
+    SELECT
+        (SELECT COUNT(*)
+         FROM clientes
+         WHERE activo = 1) AS total_clientes,
+
+        (SELECT COUNT(*)
+         FROM productos
+         WHERE activo = 1) AS total_productos,
+
+        (SELECT COUNT(*)
+         FROM pedidos) AS total_pedidos,
+
+        (SELECT COUNT(*)
+         FROM seguimiento_pedido) AS total_seguimiento;
+
+END$$
+DELIMITER ;
 
 SHOW PROCEDURE STATUS WHERE Db = 'catalogo_ventas';

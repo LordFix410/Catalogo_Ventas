@@ -1,5 +1,33 @@
 <?php
 
+require_once __DIR__ . '/includes/auth.php';
+
+requiereRol(['Administrador', 'Empleado']);
+
+require_once __DIR__ . '/config/database.php';
+
+$conexion = Database::getConnection();
+
+$clientes = 0;
+$productos = 0;
+$pedidos = 0;
+$seguimiento = 0;
+
+$sql = "CALL sp_dashboard_resumen()";
+$resultado = mysqli_query($conexion, $sql);
+
+if ($resultado) {
+    $resumen = mysqli_fetch_assoc($resultado);
+
+    $clientes = (int) ($resumen['total_clientes'] ?? 0);
+    $productos = (int) ($resumen['total_productos'] ?? 0);
+    $pedidos = (int) ($resumen['total_pedidos'] ?? 0);
+    $seguimiento = (int) ($resumen['total_seguimiento'] ?? 0);
+
+    mysqli_free_result($resultado);
+    Database::limpiarResultados($conexion);
+}
+
 $titulo = "Inicio";
 
 include 'includes/header.php';
@@ -81,7 +109,7 @@ include 'includes/sidebar.php';
                             </span>
 
                             <strong class="stat-number">
-                                0
+                                <?= $clientes ?>
                             </strong>
 
                             <span class="stat-description">
@@ -116,7 +144,7 @@ include 'includes/sidebar.php';
                             </span>
 
                             <strong class="stat-number">
-                                0
+                                <?= $productos ?>
                             </strong>
 
                             <span class="stat-description">
@@ -151,7 +179,7 @@ include 'includes/sidebar.php';
                             </span>
 
                             <strong class="stat-number">
-                                0
+                                <?= $pedidos ?>
                             </strong>
 
                             <span class="stat-description">
@@ -186,7 +214,7 @@ include 'includes/sidebar.php';
                             </span>
 
                             <strong class="stat-number">
-                                0
+                                <?= $seguimiento ?>
                             </strong>
 
                             <span class="stat-description">

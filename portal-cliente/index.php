@@ -1,5 +1,9 @@
 <?php
 
+require_once '../includes/auth.php';
+
+requiereRol(['Cliente']);
+
 require_once '../config/database.php';
 
 $conexion = Database::getConnection();
@@ -14,6 +18,7 @@ if ($resultado) {
         $productos[] = $fila;
     }
 
+    mysqli_free_result($resultado);
     Database::limpiarResultados($conexion);
 }
 ?>
@@ -30,7 +35,9 @@ require_once '../includes/sidebar.php';
         <div class="container-fluid">
             <div class="row">
                 <div class="col-sm-6">
-                    <h3 class="mb-0">Portal del Cliente</h3>
+                    <h3 class="mb-0">
+                        Bienvenido, <?= htmlspecialchars($_SESSION['nombre'] ?? 'Cliente') ?>
+                    </h3>
                 </div>
 
                 <div class="col-sm-6">

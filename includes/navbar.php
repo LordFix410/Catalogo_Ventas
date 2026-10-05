@@ -10,29 +10,37 @@
                     data-lte-toggle="sidebar"
                     href="#"
                     role="button"
+                    aria-label="Abrir menú"
                 >
                     <i class="bi bi-list"></i>
                 </a>
             </li>
 
-            <li class="nav-item d-none d-md-block">
-                <a href="/Catalogo_Ventas/index.php" class="nav-link">
-                    Inicio
+            <li class="nav-item">
+                <a href="/index.php" class="nav-link">
+                    <i class="bi bi-house me-1"></i>
+                    <span class="d-none d-sm-inline">Inicio</span>
                 </a>
             </li>
 
         </ul>
 
-
-        <ul class="navbar-nav ms-auto">
+        <ul class="navbar-nav ms-auto align-items-center">
 
             <li class="nav-item">
-
                 <span class="nav-link">
-                    <i class="bi bi-shop me-1"></i>
-                    Variedades Chiquis, S.A.
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span class="d-none d-lg-inline">
+                        <?= htmlspecialchars($_SESSION['nombre'] ?? '') ?>
+                    </span>
                 </span>
+            </li>
 
+            <li class="nav-item">
+                <a href="/logout.php" class="nav-link" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    <span class="d-none d-sm-inline">Cerrar sesión</span>
+                </a>
             </li>
 
         </ul>
