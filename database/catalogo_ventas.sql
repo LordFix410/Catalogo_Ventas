@@ -128,6 +128,8 @@ CREATE TABLE seguimiento_pedido(
     CONSTRAINT fk_seguimiento_usuarios FOREIGN KEY(id_usuario) REFERENCES usuarios(id_usuario)
 );
 
+#------------INSERTS----------
+
 INSERT INTO roles(nombre, descripcion) VALUES
 ('Administrador', 'Acceso completo al sistema'),
 ('Empleado', 'Acceso a las funciones administrativas autorizadas'),
@@ -141,8 +143,13 @@ INSERT INTO estados_pedido(nombre, orden) VALUES
 ('En proceso de entrega', 5),
 ('Entregado', 6);
 
+INSERT INTO usuarios (id_rol, nombre, correo, password, activo) VALUES
+(1, 'Administrador', 'admin@gmail.com', '$2y$10$pZWuFQsyndwe/afpD1WA5uvNYWqTEkUWocsaEUj.FsQL2B9RK9P2u', TRUE),
+(2, 'Empleado', 'empleado@gmail.com', '$2y$10$pZWuFQsyndwe/afpD1WA5uvNYWqTEkUWocsaEUj.FsQL2B9RK9P2u', TRUE),
+(3, 'Cliente', 'cliente@gmail.com', '$2y$10$pZWuFQsyndwe/afpD1WA5uvNYWqTEkUWocsaEUj.FsQL2B9RK9P2u', TRUE);
 
-#ÍNDICES 
+
+#---------------------------ÍNDICES 
 CREATE INDEX idx_usuarios_rol ON usuarios(id_rol);
 CREATE INDEX idx_productos_categoria ON productos(id_categoria);
 CREATE INDEX idx_pedidos_cliente ON pedidos(id_cliente);
