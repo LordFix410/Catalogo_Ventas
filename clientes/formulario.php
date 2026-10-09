@@ -1,5 +1,5 @@
 <?php
-// Requiere $cliente, $errores y $textoBoton
+// Requiere $cliente, $acceso, $tieneUsuario, $errores y $textoBoton
 ?>
 
 <form method="POST" novalidate>
@@ -83,6 +83,71 @@
             <div class="invalid-feedback"><?= escapar($errores['direccion'] ?? '') ?></div>
         </div>
 
+        <div class="col-12">
+            <hr class="my-2">
+            <h3 class="section-title mt-3 mb-1">
+                <i class="bi bi-key"></i> Acceso al Portal del Cliente
+            </h3>
+            <?php if ($tieneUsuario): ?>
+                <div class="form-text">Cuenta con rol Cliente. Deje la contraseña vacía para conservar la actual.</div>
+            <?php else: ?>
+                <div class="form-check mt-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           id="crear_acceso"
+                           name="crear_acceso"
+                           value="1"
+                           <?= $acceso['con_acceso'] ? 'checked' : '' ?>>
+                    <label class="form-check-label" for="crear_acceso">
+                        Crear cuenta para que el cliente pueda hacer pedidos desde el portal
+                    </label>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="col-12" id="camposAcceso">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="correo" class="form-label fw-bold">Correo electrónico <span class="text-danger">*</span></label>
+                    <div class="input-group has-validation">
+                        <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
+                        <input type="email"
+                               id="correo"
+                               name="correo"
+                               maxlength="100"
+                               autocomplete="off"
+                               class="form-control <?= isset($errores['correo']) ? 'is-invalid' : '' ?>"
+                               value="<?= escapar($acceso['correo']) ?>"
+                               placeholder="Ej: maria.lopez@gmail.com">
+                        <div class="invalid-feedback"><?= escapar($errores['correo'] ?? '') ?></div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="password" class="form-label fw-bold">
+                        <?= $tieneUsuario ? 'Nueva contraseña' : 'Contraseña <span class="text-danger">*</span>' ?>
+                    </label>
+                    <input type="password"
+                           id="password"
+                           name="password"
+                           autocomplete="new-password"
+                           class="form-control <?= isset($errores['password']) ? 'is-invalid' : '' ?>"
+                           placeholder="Mínimo <?= LARGO_MINIMO_PASSWORD ?> caracteres">
+                    <div class="invalid-feedback"><?= escapar($errores['password'] ?? '') ?></div>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="confirmar_password" class="form-label fw-bold">Confirmar contraseña</label>
+                    <input type="password"
+                           id="confirmar_password"
+                           name="confirmar_password"
+                           autocomplete="new-password"
+                           class="form-control <?= isset($errores['confirmar_password']) ? 'is-invalid' : '' ?>">
+                    <div class="invalid-feedback"><?= escapar($errores['confirmar_password'] ?? '') ?></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
@@ -93,3 +158,19 @@
     </div>
 
 </form>
+
+<?php if (!$tieneUsuario): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const check  = document.getElementById('crear_acceso');
+    const campos = document.getElementById('camposAcceso');
+
+    function mostrarCampos() {
+        campos.style.display = check.checked ? '' : 'none';
+    }
+
+    check.addEventListener('change', mostrarCampos);
+    mostrarCampos();
+});
+</script>
+<?php endif; ?>

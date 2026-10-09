@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (accion === 'desactivar') {
                 document.getElementById('modalTitulo').textContent = 'Desactivar cliente';
                 document.getElementById('modalPregunta').textContent = '¿Desea desactivar a ' + nombre + '?';
-                document.getElementById('modalNota').textContent = 'El cliente ya no aparecerá al crear pedidos, pero su historial se conserva. Puede reactivarlo en cualquier momento.';
+                document.getElementById('modalNota').textContent = 'El cliente ya no aparecerá al crear pedidos ni podrá entrar al portal, pero su historial se conserva. Puede reactivarlo en cualquier momento.';
                 document.getElementById('modalConfirmar').textContent = 'Desactivar';
             } else {
                 document.getElementById('modalTitulo').textContent = 'Reactivar cliente';

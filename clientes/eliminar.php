@@ -23,14 +23,19 @@ if (!obtenerCliente($conexion, $id_cliente)) {
 }
 
 try {
+    mysqli_begin_transaction($conexion);
+
     if ($accion === 'desactivar') {
         ejecutarProcedimiento($conexion, "CALL sp_cliente_eliminar(?)", 'i', [$id_cliente]);
-        header('Location: index.php?msg=desactivado');
     } else {
         ejecutarProcedimiento($conexion, "UPDATE clientes SET activo = TRUE WHERE id_cliente = ?", 'i', [$id_cliente]);
-        header('Location: index.php?msg=reactivado');
     }
+    sincronizarEstadoUsuario($conexion, $id_cliente, $accion === 'reactivar');
+
+    mysqli_commit($conexion);
+    header('Location: index.php?msg=' . ($accion === 'desactivar' ? 'desactivado' : 'reactivado'));
     exit;
 } catch (Exception $ex) {
+    mysqli_rollback($conexion);
     die("Error al actualizar el cliente: " . escapar($ex->getMessage()));
 }
