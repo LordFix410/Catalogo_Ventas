@@ -4,27 +4,36 @@ $titulo = "Nuevo Cliente";
 require_once 'funciones.php';
 
 $cliente = ['tipo_cliente' => 'Minorista'];
+$acceso = ['con_acceso' => true, 'correo' => ''];
+$tieneUsuario = false;
 $errores = [];
 $errorGeneral = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $conexion = Database::getConnection();
+
     list($cliente, $errores) = validarCliente($_POST);
+    list($acceso, $erroresAcceso) = validarAcceso($conexion, $_POST, false);
+    $errores = array_merge($errores, $erroresAcceso);
 
     if (empty($errores)) {
         try {
-            $conexion = Database::getConnection();
+            mysqli_begin_transaction($conexion);
 
-            // Sin cuenta en el portal
+            $id_usuario = $acceso['con_acceso'] ? crearUsuarioCliente($conexion, $cliente, $acceso) : null;
+
             ejecutarProcedimiento(
                 $conexion,
                 "CALL sp_cliente_insertar(?, ?, ?, ?, ?, ?)",
                 'isssss',
-                [null, $cliente['nombre'], $cliente['apellido'], $cliente['telefono'], $cliente['direccion'], $cliente['tipo_cliente']]
+                [$id_usuario, $cliente['nombre'], $cliente['apellido'], $cliente['telefono'], $cliente['direccion'], $cliente['tipo_cliente']]
             );
 
+            mysqli_commit($conexion);
             header('Location: index.php?msg=creado');
             exit;
         } catch (Exception $ex) {
+            mysqli_rollback($conexion);
             $errorGeneral = 'No se pudo registrar el cliente: ' . $ex->getMessage();
         }
     }

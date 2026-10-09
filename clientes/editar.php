@@ -19,14 +19,20 @@ if (!$registro) {
 }
 
 $cliente = $registro;
+$tieneUsuario = !empty($registro['id_usuario']);
+$acceso = ['con_acceso' => $tieneUsuario, 'correo' => $registro['correo'] ?? ''];
 $errores = [];
 $errorGeneral = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     list($cliente, $errores) = validarCliente($_POST);
+    list($acceso, $erroresAcceso) = validarAcceso($conexion, $_POST, $tieneUsuario, $registro['id_usuario']);
+    $errores = array_merge($errores, $erroresAcceso);
 
     if (empty($errores)) {
         try {
+            mysqli_begin_transaction($conexion);
+
             ejecutarProcedimiento(
                 $conexion,
                 "CALL sp_cliente_actualizar(?, ?, ?, ?, ?, ?)",
@@ -34,9 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 [$id_cliente, $cliente['nombre'], $cliente['apellido'], $cliente['telefono'], $cliente['direccion'], $cliente['tipo_cliente']]
             );
 
+            if ($tieneUsuario) {
+                actualizarUsuarioCliente($conexion, (int)$registro['id_usuario'], $cliente, $acceso, $registro['activo']);
+            } elseif ($acceso['con_acceso']) {
+                asociarUsuario($conexion, $id_cliente, crearUsuarioCliente($conexion, $cliente, $acceso));
+                sincronizarEstadoUsuario($conexion, $id_cliente, $registro['activo']);
+            }
+
+            mysqli_commit($conexion);
             header('Location: index.php?msg=actualizado');
             exit;
         } catch (Exception $ex) {
+            mysqli_rollback($conexion);
             $errorGeneral = 'No se pudo actualizar el cliente: ' . $ex->getMessage();
         }
     }
