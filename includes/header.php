@@ -17,6 +17,8 @@
             : 'Variedades Chiquis'; ?>
     </title>
 
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico">
+    
     <link
         rel="stylesheet"
         href="/css/bootstrap.min.css"
