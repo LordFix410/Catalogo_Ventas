@@ -30,7 +30,7 @@ class Database {
             cargarEnv(__DIR__ . '/../.env');
 
             $host     = getenv('DB_HOST') ?: 'localhost';
-            $port     = (int)(getenv('DB_PORT') ?: 3306);
+            $port     = (int)(getenv('DB_PORT') ?: 3309);
             $db_name  = getenv('DB_NAME') ?: 'catalogo_ventas';
             $user     = getenv('DB_USER') ?: 'root';
             $pass     = getenv('DB_PASS') ?: 'admin117';
