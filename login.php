@@ -92,9 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $error = 'Correo o contraseña incorrectos.';
 
-        } catch (Exception $e) {
-            $error = 'No se pudo iniciar sesión.';
-        }
+        } catch (Throwable $e) {
+    error_log('Error de login: ' . $e->getMessage());
+    $error = 'Error técnico: ' . $e->getMessage();
+}
     }
 }
 ?>
