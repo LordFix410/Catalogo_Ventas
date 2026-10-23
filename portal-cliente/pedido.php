@@ -17,9 +17,26 @@ if (empty($_SESSION['token_carrito'])) {
     $_SESSION['token_carrito'] = bin2hex(random_bytes(32));
 }
 
+$direccionPredeterminada = '';
+$idUsuarioSesion = (int) ($_SESSION['id_usuario'] ?? 0);
+if ($idUsuarioSesion > 0) {
+    $stmtDireccion = mysqli_prepare(
+        $conexion,
+        'SELECT direccion FROM clientes WHERE id_usuario = ? AND activo = 1 LIMIT 1'
+    );
+    mysqli_stmt_bind_param($stmtDireccion, 'i', $idUsuarioSesion);
+    mysqli_stmt_execute($stmtDireccion);
+    $resultadoDireccion = mysqli_stmt_get_result($stmtDireccion);
+    $clienteDireccion = mysqli_fetch_assoc($resultadoDireccion);
+    if ($resultadoDireccion) mysqli_free_result($resultadoDireccion);
+    mysqli_stmt_close($stmtDireccion);
+    $direccionPredeterminada = trim((string) ($clienteDireccion['direccion'] ?? ''));
+}
+
 $error = '';
 $mensaje = '';
 $observaciones = $_SESSION['observaciones_pedido'] ?? '';
+$direccionEntrega = $_SESSION['direccion_entrega_pedido'] ?? $direccionPredeterminada;
 
 if (isset($_GET['confirmado'])) {
     $mensaje = '¡Pedido #' . (int) $_GET['confirmado'] . ' confirmado correctamente!';
@@ -31,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!is_string($token) || !hash_equals($_SESSION['token_carrito'], $token)) {
         $error = 'La sesión del carrito ha cambiado. Recarga la página e inténtalo de nuevo.';
     } else {
+        $direccionEntrega = trim((string) ($_POST['direccion_entrega'] ?? $direccionEntrega));
+        $_SESSION['direccion_entrega_pedido'] = $direccionEntrega;
         $accion = $_POST['accion'] ?? '';
 
         try {
@@ -49,7 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['carrito'] = [];
                 unset($_SESSION['ajuste_stock']);
                 unset($_SESSION['observaciones_pedido']);
+                unset($_SESSION['direccion_entrega_pedido']);
                 $observaciones = '';
+                $direccionEntrega = $direccionPredeterminada;
                 $mensaje = 'Se ha vaciado el carrito.';
             } elseif ($accion === 'actualizar') {
                 $cantidades = $_POST['cantidad'] ?? [];
@@ -137,12 +158,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensaje = 'Cantidades ajustadas. Revisa el carrito y confirma nuevamente tu pedido.';
             } elseif ($accion === 'confirmar') {
                 $observaciones = trim($_POST['observaciones'] ?? '');
+                $direccionEntrega = trim((string) ($_POST['direccion_entrega'] ?? ''));
 
                 if (strlen($observaciones) > 500) {
                     throw new Exception('Las observaciones no pueden superar 500 caracteres.');
                 }
+                if ($direccionEntrega === '' || mb_strlen($direccionEntrega) > 255) {
+                    throw new Exception('Ingresa una dirección de entrega (máximo 255 caracteres).');
+                }
 
                 $_SESSION['observaciones_pedido'] = $observaciones;
+                $_SESSION['direccion_entrega_pedido'] = $direccionEntrega;
 
                 if (empty($_SESSION['carrito'])) {
                     throw new Exception('Tu carrito está vacío.');
@@ -234,14 +260,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $stmtPedido = mysqli_prepare(
                         $conexion,
-                        "CALL sp_pedido_insertar(?, ?)"
+                        "CALL sp_pedido_insertar(?, ?, ?)"
                     );
 
                     mysqli_stmt_bind_param(
                         $stmtPedido,
-                        "is",
+                        "iss",
                         $idCliente,
-                        $observaciones
+                        $observaciones,
+                        $direccionEntrega
                     );
 
                     mysqli_stmt_execute($stmtPedido);
@@ -282,6 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['carrito'] = [];
                     unset($_SESSION['ajuste_stock']);
                     unset($_SESSION['observaciones_pedido']);
+                    unset($_SESSION['direccion_entrega_pedido']);
                     $_SESSION['token_carrito'] = bin2hex(random_bytes(32));
 
                     header('Location: pedido.php?confirmado=' . $idPedido);
@@ -613,12 +641,30 @@ require_once '../includes/sidebar.php';
                                             Los precios y las existencias se verifican nuevamente al confirmar.
                                         </p>
 
-                                        <form method="POST" action="pedido.php">
+                                        <form method="POST" action="pedido.php" id="formConfirmarPedido">
                                             <input
                                                 type="hidden"
                                                 name="token"
                                                 value="<?= htmlspecialchars($_SESSION['token_carrito']) ?>"
                                             >
+
+                                            <div class="mb-3">
+                                                <label for="direccion_entrega" class="form-label">
+                                                    Dirección de entrega <span class="text-danger">*</span>
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="direccion_entrega"
+                                                    id="direccion_entrega"
+                                                    class="form-control"
+                                                    maxlength="255"
+                                                    autocomplete="street-address"
+                                                    placeholder="Ingresa dónde quieres recibir tu pedido"
+                                                    value="<?= htmlspecialchars($direccionEntrega, ENT_QUOTES, 'UTF-8') ?>"
+                                                    required
+                                                >
+                                                <div class="form-text">Puedes usar la dirección de tu perfil o cambiarla solo para este pedido.</div>
+                                            </div>
 
                                             <div class="mb-3">
                                                 <label for="observaciones" class="form-label">
@@ -634,12 +680,11 @@ require_once '../includes/sidebar.php';
                                             </div>
 
                                             <button
-                                                type="submit"
-                                                name="accion"
-                                                value="confirmar"
+                                                type="button"
                                                 class="btn btn-success w-100"
                                                 <?= !empty($ajustesStock) ? 'disabled' : '' ?>
-                                                onclick="return confirm('¿Deseas confirmar este pedido?');"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalConfirmarPedido"
                                             >
                                                 <i class="bi bi-check-circle"></i>
                                                 Confirmar compra
@@ -655,5 +700,45 @@ require_once '../includes/sidebar.php';
         </div>
     </div>
 </main>
+
+<div class="modal fade" id="modalConfirmarPedido" tabindex="-1" aria-labelledby="modalConfirmarPedidoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="d-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success" style="width: 48px; height: 48px;">
+                        <i class="bi bi-bag-check fs-4"></i>
+                    </span>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalConfirmarPedidoLabel">¿Confirmamos tu pedido?</h5>
+                        <small class="text-muted">Revisa el resumen antes de continuar.</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <div class="d-flex justify-content-between align-items-center rounded-3 bg-body-tertiary p-3">
+                    <span class="text-muted">Artículos</span>
+                    <strong><?= (int) $totalArticulos ?></strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="fw-semibold">Total estimado</span>
+                    <strong class="fs-4 text-primary">Q <?= number_format($total, 2) ?></strong>
+                </div>
+                <div class="mt-3">
+                    <span class="small text-muted d-block mb-1">Dirección de entrega</span>
+                    <strong><?= htmlspecialchars($direccionEntrega, ENT_QUOTES, 'UTF-8') ?></strong>
+                </div>
+                <p class="small text-muted mt-3 mb-0">Confirmaremos nuevamente los precios y las existencias al procesar el pedido.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Seguir revisando</button>
+                <button type="submit" form="formConfirmarPedido" name="accion" value="confirmar" class="btn btn-success">
+                    <i class="bi bi-check-circle me-1"></i> Sí, confirmar pedido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once '../includes/footer.php'; ?>

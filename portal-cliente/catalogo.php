@@ -147,14 +147,18 @@ require_once '../includes/sidebar.php';
                             <?php foreach ($productos as $producto): ?>
                                 <div class="col-md-4 col-lg-3 mb-4">
                                     <div class="card h-100">
-                                        <?php if (!empty($producto['imagen'])): ?>
-                                            <img
-                                                src="../<?= htmlspecialchars($producto['imagen']) ?>"
-                                                class="card-img-top"
-                                                alt="<?= htmlspecialchars($producto['nombre']) ?>"
-                                                style="height: 200px; object-fit: contain;"
-                                            >
-                                        <?php endif; ?>
+                                        <div class="bg-body-tertiary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                            <?php if (!empty($producto['imagen'])): ?>
+                                                <img
+                                                    src="/<?= htmlspecialchars($producto['imagen'], ENT_QUOTES, 'UTF-8') ?>"
+                                                    class="card-img-top"
+                                                    alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                                                    style="height: 200px; object-fit: contain;"
+                                                >
+                                            <?php else: ?>
+                                                <i class="bi bi-image text-body-secondary" style="font-size: 3rem;" aria-label="Sin imagen"></i>
+                                            <?php endif; ?>
+                                        </div>
 
                                         <div class="card-body d-flex flex-column">
                                             <h5 class="card-title">

@@ -9,7 +9,10 @@ $estados  = listarEstadosPedido($conexion);
 
 $totalPedidos   = count($pedidos);
 $montoTotal     = array_sum(array_column($pedidos, 'total'));
-$entregados     = count(array_filter($pedidos, fn($p) => $p['estado'] === 'Entregado'));
+$entregados     = count(array_filter($pedidos, fn($p) =>
+    (int)($p['id_estado'] ?? 0) === 6
+    || strcasecmp(trim((string)($p['estado'] ?? '')), 'Entregado') === 0
+));
 $enProceso      = $totalPedidos - $entregados;
 
 $mensajes = [

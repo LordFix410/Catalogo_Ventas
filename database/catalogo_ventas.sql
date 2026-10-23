@@ -78,6 +78,7 @@ CREATE TABLE productos(
 CREATE TABLE pedidos(
     id_pedido INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT NOT NULL,
+    direccion_entrega VARCHAR(255),
     fecha_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total DECIMAL(10,2) NOT NULL DEFAULT 0,
     observaciones VARCHAR(500),
@@ -480,16 +481,19 @@ END //
 
 CREATE PROCEDURE sp_pedido_insertar(
     IN p_id_cliente INT,
-    IN p_observaciones VARCHAR(500)
+    IN p_observaciones VARCHAR(500),
+    IN p_direccion_entrega VARCHAR(255)
 )
 BEGIN
     INSERT INTO pedidos (
         id_cliente,
+        direccion_entrega,
         total,
         observaciones
     )
     VALUES (
         p_id_cliente,
+        p_direccion_entrega,
         0,
         p_observaciones
     );
@@ -521,10 +525,10 @@ BEGIN
         p.fecha_pedido,
         p.total,
         p.observaciones,
+        COALESCE(NULLIF(p.direccion_entrega, ''), c.direccion) AS direccion_entrega,
         c.id_cliente,
         CONCAT(c.nombre, ' ', c.apellido) AS cliente,
-        c.telefono,
-        c.direccion
+        c.telefono
     FROM pedidos p
     INNER JOIN clientes c
         ON p.id_cliente = c.id_cliente
@@ -718,7 +722,6 @@ BEGIN
         ON p.id_categoria = c.id_categoria
     WHERE p.activo = TRUE
       AND c.activo = TRUE
-      AND p.stock > 0
     ORDER BY p.nombre;
 END //
 

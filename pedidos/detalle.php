@@ -107,8 +107,8 @@ include '../includes/sidebar.php';
                             <div class="valor-pedido"><?= escapar($pedido['telefono'] ?: 'No registrado') ?></div>
                         </div>
                         <div class="mb-3">
-                            <div class="dato-pedido">Dirección</div>
-                            <div class="valor-pedido"><?= escapar($pedido['direccion'] ?: 'No registrada') ?></div>
+                            <div class="dato-pedido">Dirección de entrega</div>
+                            <div class="valor-pedido"><?= escapar($pedido['direccion_entrega'] ?: 'No registrada') ?></div>
                         </div>
                         <div class="mb-3">
                             <div class="dato-pedido">Fecha del pedido</div>

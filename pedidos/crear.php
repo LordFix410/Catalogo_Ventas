@@ -26,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $resultado  = ejecutarProcedimiento(
                 $conexion,
-                "CALL sp_pedido_insertar(?, ?)",
-                'is',
-                [$pedido['id_cliente'], $pedido['observaciones']]
+                "CALL sp_pedido_insertar(?, ?, ?)",
+                'iss',
+                [$pedido['id_cliente'], $pedido['observaciones'], null]
             );
             $id_pedido = (int)$resultado[0]['id_pedido'];
 

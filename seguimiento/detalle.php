@@ -62,7 +62,7 @@ include_once '../includes/sidebar.php';
                 <strong>Teléfono:</strong> <?= htmlspecialchars($pedidoInfo['telefono'] ?? 'N/A') ?>
               </div>
               <div class="col-md-4">
-                <strong>Dirección:</strong> <?= htmlspecialchars($pedidoInfo['direccion'] ?? 'N/A') ?><br>
+                <strong>Dirección de entrega:</strong> <?= htmlspecialchars($pedidoInfo['direccion_entrega'] ?? 'N/A') ?><br>
                 <strong>Fecha Creación:</strong> <?= date('d/m/Y H:i', strtotime($pedidoInfo['fecha_pedido'])) ?>
               </div>
               <div class="col-md-4 text-md-right">
