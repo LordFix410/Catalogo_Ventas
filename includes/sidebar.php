@@ -1,6 +1,6 @@
 <?php
 $esCliente = isset($_SESSION['rol']) && $_SESSION['rol'] === 'Cliente';
-$rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
+$rutaInicio = $esCliente ? '/portal-cliente/catalogo.php' : '/index.php';
 ?>
 
 <aside class="app-sidebar sidebar-chiquis shadow" data-bs-theme="dark">
@@ -18,21 +18,7 @@ $rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
     <div class="sidebar-wrapper">
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" data-accordion="false">
-                <li class="nav-item">
-                    <a href="<?= $rutaInicio ?>" class="nav-link">
-                        <i class="nav-icon bi bi-house-door"></i>
-                        <p>Inicio</p>
-                    </a>
-                </li>
-
                 <?php if ($esCliente): ?>
-                    <li class="nav-item">
-                        <a href="/portal-cliente/index.php" class="nav-link">
-                            <i class="nav-icon bi bi-shop"></i>
-                            <p>Portal del Cliente</p>
-                        </a>
-                    </li>
-
                     <li class="nav-item">
                         <a href="/portal-cliente/catalogo.php" class="nav-link">
                             <i class="nav-icon bi bi-grid"></i>
@@ -43,17 +29,24 @@ $rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
                     <li class="nav-item">
                         <a href="/portal-cliente/pedido.php" class="nav-link">
                             <i class="nav-icon bi bi-cart"></i>
-                            <p>Carrito / Realizar pedido</p>
+                            <p>Carrito</p>
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a href="/portal-cliente/seguimiento.php" class="nav-link">
                             <i class="nav-icon bi bi-truck"></i>
-                            <p>Mis pedidos</p>
+                            <p>Seguimiento</p>
                         </a>
                     </li>
                 <?php else: ?>
+                    <li class="nav-item">
+                        <a href="<?= $rutaInicio ?>" class="nav-link">
+                            <i class="nav-icon bi bi-house-door"></i>
+                            <p>Inicio</p>
+                        </a>
+                    </li>
+
                     <li class="nav-item">
                         <a href="/clientes/index.php" class="nav-link">
                             <i class="nav-icon bi bi-people"></i>
@@ -67,6 +60,13 @@ $rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
                             <p>Productos</p>
                         </a>
                     </li>
+
+                    <?php if (($_SESSION['rol'] ?? '') === 'Administrador'): ?><li class="nav-item">
+                        <a href="/inventario/entradas.php" class="nav-link">
+                            <i class="nav-icon bi bi-box-arrow-in-down"></i>
+                            <p>Cargar factura</p>
+                        </a>
+                    </li><?php endif; ?>
 
                     <li class="nav-item">
                         <a href="/pedidos/index.php" class="nav-link">
@@ -85,9 +85,9 @@ $rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
                     <li class="nav-header">CLIENTES</li>
 
                     <li class="nav-item">
-                        <a href="/portal-cliente/index.php" class="nav-link">
-                            <i class="nav-icon bi bi-shop"></i>
-                            <p>Portal Cliente</p>
+                        <a href="/pedidos/crear.php" class="nav-link">
+                            <i class="nav-icon bi bi-cart-plus"></i>
+                            <p>Nuevo pedido para cliente</p>
                         </a>
                     </li>
                 <?php endif; ?>

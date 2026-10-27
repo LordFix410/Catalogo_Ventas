@@ -77,6 +77,9 @@ if ($resultado) {
     Database::limpiarResultados($conexion);
 }
 
+$categoriasCatalogo = array_values(array_unique(array_filter(array_column($productos, 'categoria'))));
+sort($categoriasCatalogo, SORT_NATURAL | SORT_FLAG_CASE);
+
 $totalArticulos = array_sum($_SESSION['carrito']);
 
 require_once '../includes/header.php';
@@ -94,7 +97,7 @@ require_once '../includes/sidebar.php';
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-end">
                         <li class="breadcrumb-item">
-                            <a href="index.php">Inicio</a>
+                            <a href="/portal-cliente/catalogo.php">Inicio</a>
                         </li>
                         <li class="breadcrumb-item active">Catálogo</li>
                     </ol>
@@ -143,15 +146,58 @@ require_once '../includes/sidebar.php';
                             No hay productos disponibles actualmente.
                         </div>
                     <?php else: ?>
-                        <div class="row">
+                        <div class="catalogo-filtros row g-2 mb-4">
+                            <div class="col-12 col-md-5">
+                                <label class="form-label" for="buscarProducto">Buscar producto</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                    <input type="search" id="buscarProducto" class="form-control" placeholder="Nombre o descripción" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label" for="filtrarCategoria">Categoría</label>
+                                <select id="filtrarCategoria" class="form-select">
+                                    <option value="">Todas</option>
+                                    <?php foreach ($categoriasCatalogo as $categoria): ?>
+                                        <option value="<?= htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8') ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <label class="form-label" for="filtrarDisponibilidad">Disponibilidad</label>
+                                <select id="filtrarDisponibilidad" class="form-select">
+                                    <option value="">Todas</option>
+                                    <option value="disponible">Disponibles</option>
+                                    <option value="agotado">Agotados</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label" for="ordenarProductos">Ordenar</label>
+                                <select id="ordenarProductos" class="form-select">
+                                    <option value="nombre">Nombre</option>
+                                    <option value="precio-asc">Menor precio</option>
+                                    <option value="precio-desc">Mayor precio</option>
+                                </select>
+                            </div>
+                            <div class="col-12 small text-muted" id="resultadoCatalogo" aria-live="polite"></div>
+                        </div>
+
+                        <div class="row catalogo-grid" id="listaProductos">
                             <?php foreach ($productos as $producto): ?>
-                                <div class="col-md-4 col-lg-3 mb-4">
-                                    <div class="card h-100">
-                                        <div class="bg-body-tertiary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <div
+                                    class="col-md-4 col-lg-3 mb-4 catalogo-item"
+                                    data-nombre="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                                    data-descripcion="<?= htmlspecialchars($producto['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                    data-categoria="<?= htmlspecialchars($producto['categoria'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                    data-precio="<?= (float) $producto['precio'] ?>"
+                                    data-stock="<?= (int) $producto['stock'] ?>"
+                                >
+                                    <div class="card h-100 catalogo-producto">
+                                        <div class="producto-imagen bg-body-tertiary d-flex align-items-center justify-content-center" style="height: 200px;">
                                             <?php if (!empty($producto['imagen'])): ?>
                                                 <img
                                                     src="/<?= htmlspecialchars($producto['imagen'], ENT_QUOTES, 'UTF-8') ?>"
-                                                    class="card-img-top"
+                                                    class="card-img-top producto-imagen-img"
                                                     alt="<?= htmlspecialchars($producto['nombre'], ENT_QUOTES, 'UTF-8') ?>"
                                                     style="height: 200px; object-fit: contain;"
                                                 >
@@ -161,11 +207,12 @@ require_once '../includes/sidebar.php';
                                         </div>
 
                                         <div class="card-body d-flex flex-column">
+                                            <span class="badge rounded-pill text-bg-light align-self-start mb-2"><?= htmlspecialchars($producto['categoria'] ?? 'General', ENT_QUOTES, 'UTF-8') ?></span>
                                             <h5 class="card-title">
                                                 <?= htmlspecialchars($producto['nombre']) ?>
                                             </h5>
 
-                                            <p class="card-text text-muted">
+                                            <p class="card-text text-muted producto-descripcion">
                                                 <?= htmlspecialchars($producto['descripcion'] ?? '') ?>
                                             </p>
 
@@ -219,11 +266,59 @@ require_once '../includes/sidebar.php';
                                 </div>
                             <?php endforeach; ?>
                         </div>
+                        <div class="alert alert-light text-center d-none" id="catalogoSinResultados">
+                            No encontramos productos con esos filtros. Prueba con otra búsqueda.
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const lista = document.getElementById('listaProductos');
+    if (!lista) return;
+
+    const tarjetas = Array.from(lista.querySelectorAll('.catalogo-item'));
+    const buscar = document.getElementById('buscarProducto');
+    const categoria = document.getElementById('filtrarCategoria');
+    const disponibilidad = document.getElementById('filtrarDisponibilidad');
+    const ordenar = document.getElementById('ordenarProductos');
+    const resultado = document.getElementById('resultadoCatalogo');
+    const vacio = document.getElementById('catalogoSinResultados');
+
+    const normalizar = valor => valor.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    function actualizarCatalogo() {
+        const termino = normalizar(buscar.value.trim());
+        const categoriaElegida = normalizar(categoria.value);
+        const stockFiltro = disponibilidad.value;
+        const visibles = tarjetas.filter(tarjeta => {
+            const coincideTexto = normalizar(tarjeta.dataset.nombre + ' ' + tarjeta.dataset.descripcion).includes(termino);
+            const coincideCategoria = !categoriaElegida || normalizar(tarjeta.dataset.categoria) === categoriaElegida;
+            const stock = Number(tarjeta.dataset.stock);
+            const coincideStock = !stockFiltro || (stockFiltro === 'disponible' ? stock > 0 : stock <= 0);
+            tarjeta.hidden = !(coincideTexto && coincideCategoria && coincideStock);
+            return !tarjeta.hidden;
+        });
+
+        visibles.sort((a, b) => {
+            if (ordenar.value === 'precio-asc') return Number(a.dataset.precio) - Number(b.dataset.precio);
+            if (ordenar.value === 'precio-desc') return Number(b.dataset.precio) - Number(a.dataset.precio);
+            return a.dataset.nombre.localeCompare(b.dataset.nombre, 'es', { sensitivity: 'base' });
+        }).forEach(tarjeta => lista.appendChild(tarjeta));
+
+        resultado.textContent = `Mostrando ${visibles.length} de ${tarjetas.length} productos`;
+        vacio.classList.toggle('d-none', visibles.length > 0);
+    }
+
+    [buscar, categoria, disponibilidad, ordenar].forEach(control => {
+        control.addEventListener(control === buscar ? 'input' : 'change', actualizarCatalogo);
+    });
+    actualizarCatalogo();
+});
+</script>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -120,7 +120,7 @@ include '../includes/sidebar.php';
                 </div>
             <?php endif; ?>
 
-            <form method="POST" novalidate id="formPedido">
+            <form method="POST" id="formPedido">
 
                 <div class="dashboard-card mb-4">
                     <h3 class="section-title">
@@ -191,7 +191,7 @@ include '../includes/sidebar.php';
 
                 <div class="d-flex justify-content-end gap-2">
                     <a href="index.php" class="btn btn-outline-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-chiquis">
+                    <button type="button" class="btn btn-chiquis" data-bs-toggle="modal" data-bs-target="#modalConfirmarPedido">
                         <i class="bi bi-save me-1"></i> Guardar Pedido
                     </button>
                 </div>
@@ -203,9 +203,37 @@ include '../includes/sidebar.php';
 
 </main>
 
+<div class="modal fade" id="modalConfirmarPedido" tabindex="-1" aria-labelledby="modalConfirmarPedidoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="modalConfirmarPedidoLabel"><i class="bi bi-cart-check text-primary me-2"></i>Confirmar pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1 small text-muted">Cliente</p>
+                <strong id="confirmPedidoCliente">Selecciona un cliente</strong>
+                <hr>
+                <p class="mb-2 small text-muted">Productos y cantidades</p>
+                <ul id="confirmPedidoProductos" class="list-unstyled mb-3"></ul>
+                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                    <span class="fw-bold">Total estimado</span>
+                    <strong id="confirmPedidoTotal" class="fs-4 text-primary">Q 0.00</strong>
+                </div>
+                <p class="small text-muted mt-3 mb-0">El pedido y las existencias se actualizarán al confirmar.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Seguir editando</button>
+                <button type="submit" form="formPedido" class="btn btn-chiquis"><i class="bi bi-check-lg me-1"></i>Confirmar pedido</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <template id="plantillaLinea">
     <tr class="fila-linea">
         <td>
+            <input type="search" class="form-control form-control-sm mb-2 buscador-producto-linea" placeholder="Buscar producto..." autocomplete="off" aria-label="Buscar producto en la lista">
             <select name="producto[]" class="form-select select-producto" required>
                 <option value="">Seleccione un producto...</option>
                 <?php foreach ($productos as $p): ?>
@@ -216,6 +244,7 @@ include '../includes/sidebar.php';
                     </option>
                 <?php endforeach; ?>
             </select>
+            <small class="text-muted small-resultados-producto"></small>
         </td>
         <td>
             <input type="number" name="cantidad[]" class="form-control input-cantidad" min="1" value="1">
@@ -236,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const plantilla    = document.getElementById('plantillaLinea');
     const btnAgregar   = document.getElementById('btnAgregarLinea');
     const resumenTotal = document.getElementById('resumenTotal');
+    const btnResumen   = document.querySelector('[data-bs-target="#modalConfirmarPedido"]');
 
     function formatearQ(valor) {
         return 'Q ' + valor.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -281,7 +311,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const nodo = plantilla.content.cloneNode(true);
         const fila = nodo.querySelector('.fila-linea');
 
-        fila.querySelector('.select-producto').addEventListener('change', () => recalcularFila(fila));
+        const select = fila.querySelector('.select-producto');
+        const busqueda = fila.querySelector('.buscador-producto-linea');
+        const resultados = fila.querySelector('.small-resultados-producto');
+
+        busqueda.addEventListener('input', function () {
+            const termino = this.value.trim().toLocaleLowerCase('es');
+            let encontrados = 0;
+            Array.from(select.options).forEach((opcion, indice) => {
+                if (indice === 0) {
+                    opcion.hidden = false;
+                    return;
+                }
+                const coincide = opcion.textContent.toLocaleLowerCase('es').includes(termino);
+                opcion.hidden = !coincide;
+                if (coincide) encontrados++;
+            });
+            if (select.selectedOptions[0] && select.selectedOptions[0].hidden) select.value = '';
+            resultados.textContent = termino ? `${encontrados} producto(s) encontrados` : '';
+            recalcularFila(fila);
+        });
+
+        select.addEventListener('change', () => recalcularFila(fila));
         fila.querySelector('.input-cantidad').addEventListener('input', () => recalcularFila(fila));
         fila.querySelector('.btn-quitar-linea').addEventListener('click', () => {
             fila.remove();
@@ -292,6 +343,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     btnAgregar.addEventListener('click', agregarLinea);
+
+    btnResumen.addEventListener('click', function () {
+        const cliente = document.getElementById('id_cliente');
+        document.getElementById('confirmPedidoCliente').textContent = cliente.selectedOptions[0]?.textContent.trim() || 'Selecciona un cliente';
+        const lista = document.getElementById('confirmPedidoProductos');
+        lista.replaceChildren();
+        cuerpo.querySelectorAll('.fila-linea').forEach(fila => {
+            const select = fila.querySelector('.select-producto');
+            const cantidad = parseInt(fila.querySelector('.input-cantidad').value, 10) || 0;
+            if (!select.value || cantidad < 1) return;
+            const opcion = select.selectedOptions[0];
+            const precio = parseFloat(opcion.dataset.precio) || 0;
+            const li = document.createElement('li');
+            li.className = 'd-flex justify-content-between gap-3 py-2 border-bottom';
+            const detalle = document.createElement('span');
+            detalle.textContent = `${opcion.textContent.split('(stock:')[0].trim()} × ${cantidad}`;
+            const subtotal = document.createElement('strong');
+            subtotal.textContent = formatearQ(precio * cantidad);
+            li.append(detalle, subtotal);
+            lista.appendChild(li);
+        });
+        document.getElementById('confirmPedidoTotal').textContent = resumenTotal.textContent;
+    });
 
     // Arranca con una fila lista para usar
     agregarLinea();

@@ -1,3 +1,6 @@
+-- Instalación completa para una base de datos nueva y vacía.
+-- Cuentas iniciales: admin@gmail.com y cliente@gmail.com | Contraseña: 123
+-- Ejecutar este archivo una sola vez en MySQL/MariaDB. No lo importes sobre tablas existentes.
 CREATE DATABASE IF NOT EXISTS catalogo_ventas
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
@@ -24,10 +27,6 @@ CREATE TABLE usuarios(
 
     CONSTRAINT fk_usuarios_roles FOREIGN KEY(id_rol) REFERENCES roles(id_rol)
 );
-
-#INSERT INTO usuarios(id_rol, nombre, correo, password, activo)
-#values(1, 'admin', 'admin@gmail.com', '$2y$10$CJj/6hEf9HAu9o4P9Emw1etqAxbiIiEvjAOPujSYYwrerje2MnoDO', true);
-#select * from usuarios;
 
 #TABLA DE CLIENTES 
 CREATE TABLE clientes(
@@ -81,6 +80,7 @@ CREATE TABLE pedidos(
     direccion_entrega VARCHAR(255),
     fecha_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total DECIMAL(10,2) NOT NULL DEFAULT 0,
+    cargo_cancelacion DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     observaciones VARCHAR(500),
 
     CONSTRAINT chk_pedidos_total CHECK(total >= 0),
@@ -104,6 +104,32 @@ CREATE TABLE detalle_pedido(
     CONSTRAINT chk_detalle_subtotal CHECK(subtotal >= 0),
     CONSTRAINT fk_detalle_pedidos FOREIGN KEY(id_pedido) REFERENCES pedidos(id_pedido),
     CONSTRAINT fk_detalle_productos FOREIGN KEY(id_producto) REFERENCES productos(id_producto)
+);
+
+CREATE TABLE entradas_inventario(
+    id_entrada INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    referencia_factura VARCHAR(80) NULL,
+    fecha_compra DATE NOT NULL,
+    total DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    observaciones VARCHAR(500) NULL,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_entradas_total CHECK(total >= 0),
+    CONSTRAINT fk_entradas_usuarios FOREIGN KEY(id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE detalle_entrada_inventario(
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_entrada INT NOT NULL,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL,
+    costo_unitario DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(12,2) NOT NULL,
+    CONSTRAINT chk_entrada_cantidad CHECK(cantidad > 0),
+    CONSTRAINT chk_entrada_costo CHECK(costo_unitario >= 0),
+    CONSTRAINT chk_entrada_subtotal CHECK(subtotal >= 0),
+    CONSTRAINT fk_detalle_entradas FOREIGN KEY(id_entrada) REFERENCES entradas_inventario(id_entrada),
+    CONSTRAINT fk_detalle_entrada_productos FOREIGN KEY(id_producto) REFERENCES productos(id_producto)
 );
 
 
@@ -142,12 +168,85 @@ INSERT INTO estados_pedido(nombre, orden) VALUES
 ('Preparado', 3),
 ('Despachado', 4),
 ('En proceso de entrega', 5),
-('Entregado', 6);
+('Entregado', 6),
+('Cancelado', 7);
 
 INSERT INTO usuarios (id_rol, nombre, correo, password, activo) VALUES
-(1, 'Administrador', 'admin@gmail.com', '$2y$10$pZWuFQsyndwe/afpD1WA5uvNYWqTEkUWocsaEUj.FsQL2B9RK9P2u', TRUE),
-(2, 'Empleado', 'empleado@gmail.com', '$2y$10$pZWuFQsyndwe/afpD1WA5uvNYWqTEkUWocsaEUj.FsQL2B9RK9P2u', TRUE),
-(3, 'Cliente', 'cliente@gmail.com', '$2y$10$pZWuFQsyndwe/afpD1WA5uvNYWqTEkUWocsaEUj.FsQL2B9RK9P2u', TRUE);
+(1, 'Administrador', 'admin@gmail.com', '$2y$10$LPQ3shuHwV6CyCi3QSfqKepIdtwtuqpZk7w8HLwtHMa.Uf1FmAorO', TRUE),
+(3, 'Cliente Demo', 'cliente@gmail.com', '$2y$10$LPQ3shuHwV6CyCi3QSfqKepIdtwtuqpZk7w8HLwtHMa.Uf1FmAorO', TRUE);
+
+INSERT INTO categorias(nombre, descripcion) VALUES
+('Ropa', 'Prendas de vestir'),
+('Accesorios', 'Accesorios y complementos'),
+('Belleza', 'Productos de belleza y cuidado personal'),
+('Hogar', 'Artículos para el hogar');
+
+-- Clientes de ejemplo: Ana tiene acceso al portal con cliente@gmail.com / 123.
+-- Los demás clientes no tienen usuario y sirven para pedidos creados por administración.
+INSERT INTO clientes
+    (id_cliente, id_usuario, nombre, apellido, telefono, direccion, tipo_cliente, activo)
+VALUES
+    (1, 2, 'Ana', 'Gómez', '5555-9012', 'Zona 1, Ciudad de Guatemala', 'Minorista', TRUE),
+    (2, NULL, 'Carlos', 'Méndez', '5555-2381', 'Zona 7, Ciudad de Guatemala', 'Mayorista', TRUE),
+    (3, NULL, 'Sofía', 'López', '5555-7440', 'Mixco, Guatemala', 'Minorista', TRUE),
+    (4, NULL, 'María', 'Pérez', '5555-1836', 'Zona 12, Ciudad de Guatemala', 'Mayorista', TRUE),
+    (5, NULL, 'Lucía', 'Ramírez', '5555-6621', 'Villa Nueva, Guatemala', 'Minorista', TRUE);
+
+-- Productos de muestra. El stock representa existencias actuales después de los pedidos de ejemplo.
+-- Las imágenes se encuentran en assets/productos/.
+INSERT INTO productos
+    (id_producto, id_categoria, nombre, descripcion, precio, stock, imagen, activo)
+VALUES
+    (1, 1, 'Blusa Rosa Chiquis', 'Blusa casual color rosa con manga ajustable.', 150.00, 14, 'assets/productos/761710cfcaae08ab697fc67df959e524.png', TRUE),
+    (2, 1, 'Pantalón Lila Estampado', 'Pantalón de tiro alto con estampado en tonos lila.', 220.00, 8, 'assets/productos/633db2d5a0b0cd8b066758431f1a7a75.png', TRUE),
+    (3, 3, 'Paleta de Sombras Colorida', 'Paleta de sombras con tonos mate y brillantes.', 95.00, 12, 'assets/productos/909f67c9214224da81b36bab865d355d.png', TRUE),
+    (4, 2, 'Bolso Acolchado Morado', 'Bolso de mano acolchado con cadena decorativa.', 185.00, 6, 'assets/productos/6232da93bf49e14d90693cd400ea51a8.png', TRUE),
+    (5, 1, 'Jeans Acampanados', 'Jeans azul de corte acampanado y cintura alta.', 210.00, 9, 'assets/productos/3c22735fca62f5b8a92f1869f40602bd.png', TRUE);
+
+-- Pedidos de ejemplo con totales que coinciden con sus respectivos detalles.
+INSERT INTO pedidos
+    (id_pedido, id_cliente, direccion_entrega, fecha_pedido, total, observaciones)
+VALUES
+    (1, 1, 'Zona 1, Ciudad de Guatemala', CURRENT_TIMESTAMP - INTERVAL 6 DAY, 430.00, 'Entregar por la tarde.'),
+    (2, 2, 'Zona 7, Ciudad de Guatemala', CURRENT_TIMESTAMP - INTERVAL 3 DAY, 650.00, 'Pedido mayorista.'),
+    (3, 3, 'Mixco, Guatemala', CURRENT_TIMESTAMP - INTERVAL 1 DAY, 465.00, 'Avisar antes de llegar.'),
+    (4, 4, 'Zona 12, Ciudad de Guatemala', CURRENT_TIMESTAMP - INTERVAL 2 HOUR, 150.00, NULL),
+    (5, 5, 'Villa Nueva, Guatemala', CURRENT_TIMESTAMP - INTERVAL 2 DAY, 420.00, 'Entregar en recepción.');
+
+INSERT INTO detalle_pedido
+    (id_pedido, id_producto, cantidad, precio_unitario, subtotal)
+VALUES
+    (1, 1, 1, 150.00, 150.00),
+    (1, 3, 1, 95.00, 95.00),
+    (1, 4, 1, 185.00, 185.00),
+    (2, 2, 2, 220.00, 440.00),
+    (2, 5, 1, 210.00, 210.00),
+    (3, 4, 2, 185.00, 370.00),
+    (3, 3, 1, 95.00, 95.00),
+    (4, 1, 1, 150.00, 150.00),
+    (5, 5, 2, 210.00, 420.00);
+
+-- Historial de estados de ejemplo; el pedido 1 está entregado.
+INSERT INTO seguimiento_pedido
+    (id_pedido, id_estado, id_usuario, fecha_hora, observacion)
+VALUES
+    (1, 1, 1, CURRENT_TIMESTAMP - INTERVAL 6 DAY, 'Hemos recibido su pedido.'),
+    (1, 2, 1, CURRENT_TIMESTAMP - INTERVAL 6 DAY + INTERVAL 2 HOUR, 'Pedido en preparación.'),
+    (1, 3, 1, CURRENT_TIMESTAMP - INTERVAL 5 DAY, 'Pedido preparado.'),
+    (1, 4, 1, CURRENT_TIMESTAMP - INTERVAL 5 DAY + INTERVAL 2 HOUR, 'Pedido despachado.'),
+    (1, 5, 1, CURRENT_TIMESTAMP - INTERVAL 5 DAY + INTERVAL 4 HOUR, 'Pedido en camino.'),
+    (1, 6, 1, CURRENT_TIMESTAMP - INTERVAL 5 DAY + INTERVAL 6 HOUR, 'Pedido entregado.'),
+    (2, 1, 1, CURRENT_TIMESTAMP - INTERVAL 3 DAY, 'Hemos recibido su pedido.'),
+    (2, 2, 1, CURRENT_TIMESTAMP - INTERVAL 2 DAY, 'Pedido en preparación.'),
+    (2, 3, 1, CURRENT_TIMESTAMP - INTERVAL 1 DAY, 'Pedido preparado.'),
+    (3, 1, 1, CURRENT_TIMESTAMP - INTERVAL 1 DAY, 'Hemos recibido su pedido.'),
+    (3, 2, 1, CURRENT_TIMESTAMP - INTERVAL 20 HOUR, 'Pedido en preparación.'),
+    (3, 3, 1, CURRENT_TIMESTAMP - INTERVAL 12 HOUR, 'Pedido preparado.'),
+    (3, 4, 1, CURRENT_TIMESTAMP - INTERVAL 6 HOUR, 'Pedido despachado.'),
+    (3, 5, 1, CURRENT_TIMESTAMP - INTERVAL 2 HOUR, 'Pedido en camino.'),
+    (4, 1, 1, CURRENT_TIMESTAMP - INTERVAL 2 HOUR, 'Hemos recibido su pedido.'),
+    (5, 1, 1, CURRENT_TIMESTAMP - INTERVAL 2 DAY, 'Hemos recibido su pedido.'),
+    (5, 2, 1, CURRENT_TIMESTAMP - INTERVAL 1 DAY, 'Pedido en preparación.');
 
 
 #---------------------------ÍNDICES 
@@ -160,18 +259,6 @@ CREATE INDEX idx_detalle_producto ON detalle_pedido(id_producto);
 CREATE INDEX idx_seguimiento_pedido ON seguimiento_pedido(id_pedido);
 CREATE INDEX idx_seguimiento_estado ON seguimiento_pedido(id_estado);
 CREATE INDEX idx_seguimiento_fecha ON seguimiento_pedido(fecha_hora);
-
-/***** SELECTS *****/
-
-SELECT * FROM ROLES;
-SELECT * FROM USUARIOS;
-SELECT * FROM CLIENTES;
-SELECT * FROM CATEGORIAS;
-SELECT * FROM PRODUCTOS;
-SELECT * FROM PEDIDOS;
-SELECT * FROM DETALLE_PEDIDO;
-SELECT * FROM ESTADOS_PEDIDO;
-SELECT * FROM SEGUIMIENTO_PEDIDO;
 
 /***************** PROCEDIMIENTOS ALMACENADOS *******************/
 
@@ -507,6 +594,7 @@ BEGIN
         p.id_pedido,
         p.fecha_pedido,
         p.total,
+        p.cargo_cancelacion,
         p.observaciones,
         c.id_cliente,
         CONCAT(c.nombre, ' ', c.apellido) AS cliente
@@ -524,6 +612,7 @@ BEGIN
         p.id_pedido,
         p.fecha_pedido,
         p.total,
+        p.cargo_cancelacion,
         p.observaciones,
         COALESCE(NULLIF(p.direccion_entrega, ''), c.direccion) AS direccion_entrega,
         c.id_cliente,
@@ -687,6 +776,7 @@ BEGIN
         p.total,
         e.id_estado,
         e.nombre AS estado,
+        COALESCE(e.orden, 1) AS orden,
         s.fecha_hora AS ultima_actualizacion
     FROM pedidos p
     INNER JOIN clientes c
@@ -750,7 +840,7 @@ BEGIN
     ORDER BY p.fecha_pedido DESC;
 END //
 
-DELIMITER;
+DELIMITER ;
 
 DROP PROCEDURE IF EXISTS sp_dashboard_resumen;
 DELIMITER $$

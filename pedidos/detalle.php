@@ -20,10 +20,13 @@ if (!$pedido) {
 
 $items     = listarDetallePedido($conexion, $id_pedido);
 $historial = listarHistorialSeguimiento($conexion, $id_pedido);
-$estadoActual = !empty($historial) ? end($historial)['estado'] : null;
+$ultimoEvento = !empty($historial) ? end($historial) : null;
+$estadoActual = $ultimoEvento['estado'] ?? null;
+$ordenActual = (int) ($ultimoEvento['orden'] ?? 1);
 
 $mensajes = [
     'creado' => 'Pedido registrado correctamente.',
+    'actualizado' => 'Pedido actualizado correctamente.',
 ];
 $mensaje = $mensajes[$_GET['msg'] ?? ''] ?? null;
 
@@ -35,9 +38,9 @@ include '../includes/sidebar.php';
 <style>
   .dato-pedido { color: #6B7280; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
   .valor-pedido { color: #1F2937; font-weight: 600; }
-  .timeline-item { position: relative; padding-left: 28px; padding-bottom: 18px; border-left: 2px solid #FCE7F3; }
-  .timeline-item:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
-  .timeline-item::before {
+  .pedido-historial-item { position: relative; min-width: 0; padding-left: 28px; padding-bottom: 18px; border-left: 2px solid #FCE7F3; overflow-wrap: anywhere; }
+  .pedido-historial-item:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+  .pedido-historial-item::before {
       content: '';
       position: absolute;
       left: -7px;
@@ -86,7 +89,7 @@ include '../includes/sidebar.php';
 
             <div class="row g-4">
 
-                <div class="col-12 col-xl-4">
+                <div class="col-12 col-xxl-4">
                     <div class="dashboard-card mb-4">
                         <h3 class="section-title">
                             <i class="bi bi-receipt"></i> Información del pedido
@@ -119,7 +122,15 @@ include '../includes/sidebar.php';
                             <div class="valor-pedido"><?= nl2br(escapar($pedido['observaciones'] ?: 'Sin observaciones')) ?></div>
                         </div>
 
-                        <div class="d-flex gap-2">
+                        <?php if ((float) ($pedido['cargo_cancelacion'] ?? 0) > 0): ?>
+                            <div class="alert alert-warning"><strong>Cargo de cancelación (20%):</strong> Q <?= number_format((float) $pedido['cargo_cancelacion'], 2) ?></div>
+                        <?php endif; ?>
+
+                        <div class="pedido-info-acciones">
+                            <?php if (!in_array(mb_strtolower((string) ($estadoActual ?? '')), ['cancelado', 'entregado'], true)): ?>
+                                <?php if ($ordenActual === 1 && mb_strtolower((string) $estadoActual) === 'recibido'): ?><a href="editar.php?id=<?= $id_pedido ?>" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar</a><?php endif; ?>
+                                <a href="cancelar.php?id=<?= $id_pedido ?>" class="btn btn-outline-danger"><i class="bi bi-x-circle me-1"></i>Cancelar pedido</a>
+                            <?php endif; ?>
                             <a href="/seguimiento/detalle.php?id=<?= $id_pedido ?>" class="btn btn-chiquis">
                                 <i class="bi bi-truck me-1"></i> Seguimiento
                             </a>
@@ -129,35 +140,16 @@ include '../includes/sidebar.php';
                         </div>
                     </div>
 
-                    <?php if (!empty($historial)): ?>
-                        <div class="dashboard-card">
-                            <h3 class="section-title">
-                                <i class="bi bi-clock-history"></i> Historial
-                            </h3>
-                            <?php foreach (array_reverse($historial) as $h): ?>
-                                <div class="timeline-item">
-                                    <div class="fw-bold"><?= escapar($h['estado']) ?></div>
-                                    <div class="text-muted small"><?= date('d/m/Y H:i', strtotime($h['fecha_hora'])) ?></div>
-                                    <?php if (!empty($h['observacion'])): ?>
-                                        <div class="small"><?= escapar($h['observacion']) ?></div>
-                                    <?php endif; ?>
-                                    <?php if (!empty($h['actualizado_por'])): ?>
-                                        <div class="text-muted small">Por <?= escapar($h['actualizado_por']) ?></div>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
                 </div>
 
-                <div class="col-12 col-xl-8">
+                <div class="col-12 col-xxl-8">
                     <div class="dashboard-card">
                         <h3 class="section-title">
                             <i class="bi bi-box-seam"></i> Detalle de productos
                         </h3>
 
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="table table-hover align-middle mb-0 tabla-detalle-pedido">
                                 <thead style="background-color: #FCE7F3; color: #1F2937;">
                                     <tr>
                                         <th>Producto</th>
@@ -170,10 +162,10 @@ include '../includes/sidebar.php';
                                     <?php if (!empty($items)): ?>
                                         <?php foreach ($items as $item): ?>
                                             <tr>
-                                                <td><?= escapar($item['producto']) ?></td>
-                                                <td class="text-end"><?= (int)$item['cantidad'] ?></td>
-                                                <td class="text-end">Q <?= number_format($item['precio_unitario'], 2) ?></td>
-                                                <td class="text-end fw-bold">Q <?= number_format($item['subtotal'], 2) ?></td>
+                                                <td data-label="Producto"><?= escapar($item['producto']) ?></td>
+                                                <td data-label="Cantidad" class="text-end"><?= (int)$item['cantidad'] ?></td>
+                                                <td data-label="Precio unitario" class="text-end">Q <?= number_format($item['precio_unitario'], 2) ?></td>
+                                                <td data-label="Subtotal" class="text-end fw-bold">Q <?= number_format($item['subtotal'], 2) ?></td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -196,6 +188,30 @@ include '../includes/sidebar.php';
                 </div>
 
             </div>
+
+            <?php if (!empty($historial)): ?>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <section class="dashboard-card pedido-historial-card">
+                            <h3 class="section-title"><i class="bi bi-clock-history"></i> Historial del pedido</h3>
+                            <div class="pedido-historial-lista">
+                                <?php foreach (array_reverse($historial) as $h): ?>
+                                    <article class="pedido-historial-item">
+                                        <div class="fw-bold"><?= escapar($h['estado']) ?></div>
+                                        <div class="text-muted small"><?= date('d/m/Y H:i', strtotime($h['fecha_hora'])) ?></div>
+                                        <?php if (!empty($h['observacion'])): ?>
+                                            <div class="small mt-1"><?= escapar($h['observacion']) ?></div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($h['actualizado_por'])): ?>
+                                            <div class="text-muted small mt-1">Por <?= escapar($h['actualizado_por']) ?></div>
+                                        <?php endif; ?>
+                                    </article>
+                                <?php endforeach; ?>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            <?php endif; ?>
 
         </div>
     </div>
