@@ -1,6 +1,6 @@
 <?php
 $esCliente = isset($_SESSION['rol']) && $_SESSION['rol'] === 'Cliente';
-$rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
+$rutaInicio = $esCliente ? '/portal-cliente/catalogo.php' : '/index.php';
 ?>
 
 <nav class="app-header navbar navbar-expand bg-body">
@@ -13,8 +13,8 @@ $rutaInicio = $esCliente ? '/portal-cliente/index.php' : '/index.php';
             </li>
             <li class="nav-item">
                 <a href="<?= $rutaInicio ?>" class="nav-link">
-                    <i class="bi bi-house me-1"></i>
-                    <span class="d-none d-sm-inline">Inicio</span>
+                    <i class="bi <?= $esCliente ? 'bi-grid' : 'bi-house' ?> me-1"></i>
+                    <span class="d-none d-sm-inline"><?= $esCliente ? 'Catálogo' : 'Inicio' ?></span>
                 </a>
             </li>
         </ul>

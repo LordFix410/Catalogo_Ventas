@@ -239,7 +239,7 @@ include 'includes/sidebar.php';
 
 
                 <!-- BIENVENIDA -->
-                <div class="col-12 col-xl-8">
+                <div class="col-12">
 
                     <div class="dashboard-card welcome-card">
 
@@ -276,12 +276,12 @@ include 'includes/sidebar.php';
                                 entrega.
                             </p>
 
-                            <a href="/productos/index.php"
+                            <a href="/pedidos/crear.php"
                                class="btn btn-chiquis">
 
                                 <i class="bi bi-cart me-2"></i>
 
-                                Comenzar
+                                Comenzar compra
 
                                 <i class="bi bi-arrow-right ms-2"></i>
 
@@ -293,67 +293,6 @@ include 'includes/sidebar.php';
 
                 </div>
 
-
-                <!-- ACCESOS RÁPIDOS -->
-                <div class="col-12 col-xl-4">
-
-                    <div class="dashboard-card">
-
-                        <h3 class="section-title">
-
-                            <i class="bi bi-lightning-charge-fill"></i>
-
-                            Accesos rápidos
-
-                        </h3>
-
-
-                        <div class="quick-grid">
-
-                            <a href="/clientes/index.php"
-                               class="quick-link quick-clientes">
-
-                                <i class="bi bi-people"></i>
-
-                                <span>Clientes</span>
-
-                            </a>
-
-
-                            <a href="/productos/index.php"
-                               class="quick-link quick-productos">
-
-                                <i class="bi bi-box-seam"></i>
-
-                                <span>Productos</span>
-
-                            </a>
-
-
-                            <a href="/pedidos/index.php"
-                               class="quick-link quick-pedidos">
-
-                                <i class="bi bi-cart"></i>
-
-                                <span>Pedidos</span>
-
-                            </a>
-
-
-                            <a href="/seguimiento/index.php"
-                               class="quick-link quick-seguimiento">
-
-                                <i class="bi bi-truck"></i>
-
-                                <span>Seguimiento</span>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
 
             </div>
 

@@ -1,117 +1,187 @@
 <?php
-// seguimiento/detalle.php
-require_once '../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
+requiereRol(['Cliente', 'Administrador', 'Empleado']);
+require_once __DIR__ . '/../config/database.php';
 
-$id_pedido = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$esCliente = ($_SESSION['rol'] ?? '') === 'Cliente';
+$rutaRegreso = $esCliente ? '/portal-cliente/seguimiento.php' : '/seguimiento/index.php';
+$idPedido = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
 
-if ($id_pedido <= 0) {
-    header('Location: index.php');
+if (!$idPedido || $idPedido < 1) {
+    header('Location: ' . $rutaRegreso);
     exit;
 }
 
 $conexion = Database::getConnection();
 
-// Datos del pedido
+if ($esCliente) {
+    $stmtAcceso = mysqli_prepare(
+        $conexion,
+        'SELECT 1 FROM pedidos p INNER JOIN clientes c ON c.id_cliente = p.id_cliente WHERE p.id_pedido = ? AND c.id_usuario = ? AND c.activo = 1 LIMIT 1'
+    );
+    $idUsuario = (int) ($_SESSION['id_usuario'] ?? 0);
+    mysqli_stmt_bind_param($stmtAcceso, 'ii', $idPedido, $idUsuario);
+    mysqli_stmt_execute($stmtAcceso);
+    $resultadoAcceso = mysqli_stmt_get_result($stmtAcceso);
+    $tieneAcceso = $resultadoAcceso && mysqli_fetch_row($resultadoAcceso);
+    if ($resultadoAcceso) mysqli_free_result($resultadoAcceso);
+    mysqli_stmt_close($stmtAcceso);
+
+    if (!$tieneAcceso) {
+        header('Location: ' . $rutaRegreso);
+        exit;
+    }
+}
+
 $pedidoInfo = null;
-$resP = mysqli_query($conexion, "CALL sp_pedido_obtener($id_pedido)");
-if ($resP) {
-    $pedidoInfo = mysqli_fetch_assoc($resP);
-    mysqli_free_result($resP);
+$resultadoPedido = mysqli_query($conexion, 'CALL sp_pedido_obtener(' . (int) $idPedido . ')');
+if ($resultadoPedido) {
+    $pedidoInfo = mysqli_fetch_assoc($resultadoPedido);
+    mysqli_free_result($resultadoPedido);
 }
 Database::limpiarResultados($conexion);
 
-// Historial
+if (!$pedidoInfo) {
+    header('Location: ' . $rutaRegreso);
+    exit;
+}
+
 $historial = [];
-$resH = mysqli_query($conexion, "CALL sp_seguimiento_historial($id_pedido)");
-if ($resH) {
-    $historial = mysqli_fetch_all($resH, MYSQLI_ASSOC);
-    mysqli_free_result($resH);
+$resultadoHistorial = mysqli_query($conexion, 'CALL sp_seguimiento_historial(' . (int) $idPedido . ')');
+if ($resultadoHistorial) {
+    $historial = mysqli_fetch_all($resultadoHistorial, MYSQLI_ASSOC);
+    mysqli_free_result($resultadoHistorial);
+}
+Database::limpiarResultados($conexion);
+$ultimoEvento = $historial ? end($historial) : null;
+$estadoPedidoActual = mb_strtolower((string) ($ultimoEvento['estado'] ?? 'recibido'));
+$ordenPedidoActual = (int) ($ultimoEvento['orden'] ?? 1);
+
+$productosPedido = [];
+$resultadoProductos = mysqli_query($conexion, 'CALL sp_detalle_listar(' . (int) $idPedido . ')');
+if ($resultadoProductos) {
+    $productosPedido = mysqli_fetch_all($resultadoProductos, MYSQLI_ASSOC);
+    mysqli_free_result($resultadoProductos);
 }
 Database::limpiarResultados($conexion);
 
-include_once '../includes/header.php';
-include_once '../includes/navbar.php';
-include_once '../includes/sidebar.php';
+$titulo = 'Historial del pedido';
+require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/navbar.php';
+require_once __DIR__ . '/../includes/sidebar.php';
 ?>
 
-<div class="content-wrapper" style="background-color: #F8FAFC;">
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0" style="color: #1F2937; font-weight: bold;">
-            Historial del Pedido #<?= str_pad($id_pedido, 5, '0', STR_PAD_LEFT) ?>
-          </h1>
-        </div>
-        <div class="col-sm-6 text-right">
-          <a href="index.php" class="btn btn-outline-secondary"><i class="fas fa-arrow-left mr-1"></i> Regresar</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <section class="content">
-    <div class="container-fluid">
-
-      <?php if ($pedidoInfo): ?>
-        <div class="card mb-4" style="border-left: 4px solid #8B5CF6;">
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-4">
-                <strong>Cliente:</strong> <?= htmlspecialchars($pedidoInfo['cliente']) ?><br>
-                <strong>Teléfono:</strong> <?= htmlspecialchars($pedidoInfo['telefono'] ?? 'N/A') ?>
-              </div>
-              <div class="col-md-4">
-                <strong>Dirección de entrega:</strong> <?= htmlspecialchars($pedidoInfo['direccion_entrega'] ?? 'N/A') ?><br>
-                <strong>Fecha Creación:</strong> <?= date('d/m/Y H:i', strtotime($pedidoInfo['fecha_pedido'])) ?>
-              </div>
-              <div class="col-md-4 text-md-right">
-                <h4 style="color: #BE185D; font-weight: bold;">Total: Q <?= number_format($pedidoInfo['total'], 2) ?></h4>
-              </div>
-            </div>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <!-- Timeline -->
-      <div class="row">
-        <div class="col-md-12">
-          <div class="timeline">
-            <?php if (!empty($historial)): ?>
-              <?php foreach ($historial as $h): ?>
-                <div class="time-label">
-                  <span style="background-color: #8B5CF6; color: #fff;">
-                    <?= date('d/m/Y', strtotime($h['fecha_hora'])) ?>
-                  </span>
-                </div>
+<main class="app-main">
+    <div class="app-content-header">
+        <div class="container-fluid">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div>
-                  <i class="fas fa-truck" style="background-color: #EC4899; color: #fff;"></i>
-                  <div class="timeline-item">
-                    <span class="time"><i class="fas fa-clock mr-1"></i> <?= date('H:i', strtotime($h['fecha_hora'])) ?></span>
-                    <h3 class="timeline-header" style="color: #1F2937;">
-                      Estado: <strong><?= htmlspecialchars($h['estado']) ?></strong> (Etapa <?= $h['orden'] ?> de 6)
-                    </h3>
-                    <div class="timeline-body">
-                      <?= htmlspecialchars($h['observacion']) ?>
-                    </div>
-                    <div class="timeline-footer text-muted" style="font-size: 0.85rem;">
-                      Actualizado por: <em><?= htmlspecialchars($h['actualizado_por'] ?? 'Sistema / Administrador') ?></em>
-                    </div>
-                  </div>
+                    <span class="page-eyebrow">SEGUIMIENTO</span>
+                    <h1 class="page-title">Pedido #<?= str_pad((string) $idPedido, 5, '0', STR_PAD_LEFT) ?></h1>
+                    <p class="page-description mb-0">Historial de actualizaciones y estado de entrega.</p>
                 </div>
-              <?php endforeach; ?>
-              <div>
-                <i class="fas fa-check" style="background-color: #10B981; color: #fff;"></i>
-              </div>
-            <?php else: ?>
-              <p class="text-muted">No existen registros de seguimiento.</p>
-            <?php endif; ?>
-          </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <?php if ($esCliente && !in_array($estadoPedidoActual, ['cancelado', 'entregado'], true)): ?>
+                        <?php if ($ordenPedidoActual === 1 && $estadoPedidoActual === 'recibido'): ?><a href="/pedidos/editar.php?id=<?= (int) $idPedido ?>" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Editar pedido</a><?php endif; ?>
+                        <a href="/pedidos/cancelar.php?id=<?= (int) $idPedido ?>" class="btn btn-outline-danger"><i class="bi bi-x-circle me-1"></i>Cancelar pedido</a>
+                    <?php endif; ?>
+                    <a href="<?= htmlspecialchars($rutaRegreso, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-outline-secondary seguimiento-regresar"><i class="bi bi-arrow-left me-1"></i> Regresar</a>
+                </div>
+            </div>
         </div>
-      </div>
-
     </div>
-  </section>
-</div>
 
-<?php include_once '../includes/footer.php'; ?>
+    <div class="app-content">
+        <div class="container-fluid">
+            <section class="card seguimiento-resumen mb-4" aria-label="Resumen del pedido">
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <span class="seguimiento-dato-label">Cliente</span>
+                            <div class="seguimiento-dato-valor"><?= htmlspecialchars($pedidoInfo['cliente'] ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <span class="seguimiento-dato-label">Teléfono</span>
+                            <div class="seguimiento-dato-valor"><?= htmlspecialchars($pedidoInfo['telefono'] ?: 'No registrado', ENT_QUOTES, 'UTF-8') ?></div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <span class="seguimiento-dato-label">Dirección de entrega</span>
+                            <div class="seguimiento-dato-valor"><?= htmlspecialchars($pedidoInfo['direccion_entrega'] ?? 'No registrada', ENT_QUOTES, 'UTF-8') ?></div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <span class="seguimiento-dato-label">Fecha de creación</span>
+                            <div class="seguimiento-dato-valor"><?= date('d/m/Y H:i', strtotime($pedidoInfo['fecha_pedido'])) ?></div>
+                        </div>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <span class="seguimiento-dato-label">Total</span>
+                            <div class="seguimiento-total">Q <?= number_format((float) $pedidoInfo['total'], 2) ?></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <?php if ((float) ($pedidoInfo['cargo_cancelacion'] ?? 0) > 0): ?>
+                <div class="alert alert-warning"><strong>Cargo de cancelación (20%):</strong> Q <?= number_format((float) $pedidoInfo['cargo_cancelacion'], 2) ?></div>
+            <?php endif; ?>
+
+            <section class="dashboard-card seguimiento-productos-card mb-4">
+                <h2 class="section-title"><i class="bi bi-bag-check"></i> Productos comprados</h2>
+                <?php if ($productosPedido): ?>
+                    <div class="seguimiento-productos-lista">
+                        <?php foreach ($productosPedido as $producto): ?>
+                            <article class="seguimiento-producto">
+                                <div class="seguimiento-producto-info">
+                                    <strong><?= htmlspecialchars($producto['producto'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                    <span class="text-muted small">
+                                        <?= (int) $producto['cantidad'] ?> × Q <?= number_format((float) $producto['precio_unitario'], 2) ?> c/u
+                                    </span>
+                                </div>
+                                <strong class="seguimiento-producto-subtotal">Q <?= number_format((float) $producto['subtotal'], 2) ?></strong>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="d-flex justify-content-between border-top mt-3 pt-3 fw-bold">
+                        <span>Total del pedido</span>
+                        <span class="text-primary">Q <?= number_format((float) $pedidoInfo['total'], 2) ?></span>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-light mb-0">Este pedido no tiene productos registrados.</div>
+                <?php endif; ?>
+            </section>
+
+            <section class="dashboard-card seguimiento-historial-card">
+                <h2 class="section-title"><i class="bi bi-clock-history"></i> Historial del pedido</h2>
+                <?php if ($historial): ?>
+                    <div class="seguimiento-eventos">
+                        <?php foreach ($historial as $evento): ?>
+                            <article class="seguimiento-evento">
+                                <div class="seguimiento-evento-marca" aria-hidden="true"><i class="bi bi-truck"></i></div>
+                                <div class="card seguimiento-evento-card">
+                                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <strong><?= htmlspecialchars($evento['estado'], ENT_QUOTES, 'UTF-8') ?></strong>
+                                        <time class="small text-muted" datetime="<?= htmlspecialchars(date('c', strtotime($evento['fecha_hora'])), ENT_QUOTES, 'UTF-8') ?>">
+                                            <?= date('d/m/Y · H:i', strtotime($evento['fecha_hora'])) ?>
+                                        </time>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-2"><?= nl2br(htmlspecialchars($evento['observacion'] ?? 'Sin comentario.', ENT_QUOTES, 'UTF-8')) ?></p>
+                                        <span class="small text-muted">Etapa <?= (int) $evento['orden'] ?> de 6</span>
+                                        <div class="small text-muted mt-2">
+                                            Actualizado por: <em><?= htmlspecialchars($evento['actualizado_por'] ?? 'Sistema / Administrador', ENT_QUOTES, 'UTF-8') ?></em>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Todavía no hay actualizaciones para este pedido.
+                    </div>
+                <?php endif; ?>
+            </section>
+        </div>
+    </div>
+</main>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -322,7 +322,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             error_log('Error al procesar el carrito: ' . $e->getMessage());
-            $error = 'No se pudo completar la operación. Verifica las existencias e inténtalo nuevamente.';
+            $detalleError = strtolower($e->getMessage());
+            if (str_contains($detalleError, 'sp_pedido_insertar') || str_contains($detalleError, 'direccion_entrega')) {
+                $error = 'La base de datos necesita la actualización para guardar la dirección de entrega. Ejecuta el script migracion_direccion_entrega.sql y vuelve a intentarlo.';
+            } elseif (str_contains($detalleError, 'stock')) {
+                $error = 'Las existencias cambiaron mientras confirmabas. Actualiza las cantidades del carrito y vuelve a intentarlo.';
+            } else {
+                $error = 'No se pudo registrar el pedido. Inténtalo de nuevo; si el problema continúa, comunícate con administración.';
+            }
         }
     }
 }
@@ -399,7 +406,7 @@ require_once '../includes/sidebar.php';
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-end">
                         <li class="breadcrumb-item">
-                            <a href="index.php">Inicio</a>
+                            <a href="/portal-cliente/catalogo.php">Inicio</a>
                         </li>
                         <li class="breadcrumb-item">
                             <a href="catalogo.php">Catálogo</a>
@@ -447,7 +454,7 @@ require_once '../includes/sidebar.php';
                         </p>
 
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered tabla-ajustes-carrito">
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
@@ -459,9 +466,9 @@ require_once '../includes/sidebar.php';
                                     <?php foreach ($itemsCarrito as $item): ?>
                                         <?php if (array_key_exists($item['id_producto'], $ajustesStock)): ?>
                                             <tr>
-                                                <td><?= htmlspecialchars($item['nombre']) ?></td>
-                                                <td><?= (int) $item['cantidad'] ?></td>
-                                                <td>
+                                                <td data-label="Producto"><?= htmlspecialchars($item['nombre']) ?></td>
+                                                <td data-label="Solicitado"><?= (int) $item['cantidad'] ?></td>
+                                                <td data-label="Disponible ahora">
                                                     <?= (int) $ajustesStock[$item['id_producto']] ?>
                                                 </td>
                                             </tr>
@@ -520,7 +527,7 @@ require_once '../includes/sidebar.php';
                             >
 
                             <div class="table-responsive">
-                                <table class="table table-bordered table-hover align-middle">
+                                <table class="table table-bordered table-hover align-middle tabla-carrito">
                                     <thead>
                                         <tr>
                                             <th>Producto</th>
@@ -535,17 +542,17 @@ require_once '../includes/sidebar.php';
                                     <tbody>
                                         <?php foreach ($itemsCarrito as $item): ?>
                                             <tr>
-                                                <td>
+                                                <td data-label="Producto">
                                                     <strong>
                                                         <?= htmlspecialchars($item['nombre']) ?>
                                                     </strong>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Precio unitario">
                                                     Q <?= number_format((float) $item['precio'], 2) ?>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Cantidad">
                                                     <input
                                                         type="number"
                                                         class="form-control"
@@ -560,11 +567,11 @@ require_once '../includes/sidebar.php';
                                                     </small>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Subtotal">
                                                     Q <?= number_format((float) $item['subtotal'], 2) ?>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Existencias">
                                                     <?php if (!(bool) $item['activo']): ?>
                                                         <span class="badge text-bg-danger">No disponible</span>
                                                     <?php else: ?>
@@ -578,7 +585,7 @@ require_once '../includes/sidebar.php';
                                                     <?php endif; ?>
                                                 </td>
 
-                                                <td>
+                                                <td data-label="Acción">
                                                     <button
                                                         type="submit"
                                                         name="eliminar"
@@ -729,6 +736,22 @@ require_once '../includes/sidebar.php';
                     <span class="small text-muted d-block mb-1">Dirección de entrega</span>
                     <strong><?= htmlspecialchars($direccionEntrega, ENT_QUOTES, 'UTF-8') ?></strong>
                 </div>
+                <?php if (!empty($itemsCarrito)): ?>
+                    <div class="border-top mt-3 pt-3">
+                        <span class="small text-muted d-block mb-2">Productos del pedido</span>
+                        <div class="pedido-resumen-items">
+                            <?php foreach ($itemsCarrito as $item): ?>
+                                <div class="d-flex justify-content-between gap-3 py-2 border-bottom">
+                                    <span class="min-w-0">
+                                        <?= htmlspecialchars($item['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                                        <span class="text-muted">× <?= (int) $item['cantidad'] ?></span>
+                                    </span>
+                                    <strong class="text-nowrap">Q <?= number_format((float) $item['subtotal'], 2) ?></strong>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <p class="small text-muted mt-3 mb-0">Confirmaremos nuevamente los precios y las existencias al procesar el pedido.</p>
             </div>
             <div class="modal-footer border-0 pt-0">

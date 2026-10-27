@@ -13,10 +13,15 @@ $entregados     = count(array_filter($pedidos, fn($p) =>
     (int)($p['id_estado'] ?? 0) === 6
     || strcasecmp(trim((string)($p['estado'] ?? '')), 'Entregado') === 0
 ));
-$enProceso      = $totalPedidos - $entregados;
+$enProceso      = count(array_filter($pedidos, fn($p) =>
+    strcasecmp(trim((string) ($p['estado'] ?? '')), 'Entregado') !== 0
+    && strcasecmp(trim((string) ($p['estado'] ?? '')), 'Cancelado') !== 0
+));
 
 $mensajes = [
     'creado' => 'Pedido registrado correctamente.',
+    'actualizado' => 'Pedido actualizado correctamente.',
+    'cancelado' => 'Pedido cancelado correctamente.',
 ];
 $errores = [
     'no_encontrado'     => 'El pedido solicitado no existe.',
@@ -159,19 +164,27 @@ include '../includes/sidebar.php';
                                 <tr class="fila-pedido"
                                     data-texto="<?= escapar(strtolower('#' . $p['id_pedido'] . ' ' . $p['cliente'])) ?>"
                                     data-estado="<?= escapar($p['estado'] ?? '') ?>">
-                                    <td class="text-nowrap"><strong>#<?= str_pad($p['id_pedido'], 5, '0', STR_PAD_LEFT) ?></strong></td>
-                                    <td><?= escapar($p['cliente']) ?></td>
-                                    <td class="text-nowrap"><?= date('d/m/Y H:i', strtotime($p['fecha_pedido'])) ?></td>
-                                    <td class="fw-bold">Q <?= number_format($p['total'], 2) ?></td>
-                                    <td>
+                                    <td class="text-nowrap" data-label="Pedido"><strong>#<?= str_pad($p['id_pedido'], 5, '0', STR_PAD_LEFT) ?></strong></td>
+                                    <td data-label="Cliente"><?= escapar($p['cliente']) ?></td>
+                                    <td class="text-nowrap" data-label="Fecha"><?= date('d/m/Y H:i', strtotime($p['fecha_pedido'])) ?></td>
+                                    <td class="fw-bold" data-label="Total">Q <?= number_format($p['total'], 2) ?></td>
+                                    <td data-label="Estado">
                                         <span class="badge px-3 py-2 <?= colorBadgeEstado($p['estado'] ?? '') ?>">
                                             <?= escapar($p['estado'] ?? 'Sin estado') ?>
                                         </span>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" data-label="Acciones">
+                                        <div class="acciones-pedido">
                                         <a href="detalle.php?id=<?= $p['id_pedido'] ?>" class="btn btn-sm btn-chiquis" title="Ver detalle">
-                                            <i class="bi bi-eye"></i> Ver
+                                            <i class="bi bi-eye"></i><span> Ver</span>
                                         </a>
+                                        <?php if ((int) ($p['orden'] ?? 1) === 1 && mb_strtolower((string) ($p['estado'] ?? '')) === 'recibido'): ?>
+                                            <a href="editar.php?id=<?= (int) $p['id_pedido'] ?>" class="btn btn-sm btn-outline-primary" title="Editar pedido"><i class="bi bi-pencil"></i></a>
+                                        <?php endif; ?>
+                                        <?php if (!in_array(mb_strtolower((string) ($p['estado'] ?? '')), ['cancelado', 'entregado'], true)): ?>
+                                            <a href="cancelar.php?id=<?= (int) $p['id_pedido'] ?>" class="btn btn-sm btn-outline-danger" title="Cancelar pedido"><i class="bi bi-x-circle"></i></a>
+                                        <?php endif; ?>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

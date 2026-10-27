@@ -6,7 +6,7 @@ require_once __DIR__ . '/config/database.php';
 
 if (isset($_SESSION['id_usuario'])) {
     if ($_SESSION['rol'] === 'Cliente') {
-        header('Location: /portal-cliente/index.php');
+        header('Location: /portal-cliente/catalogo.php');
     } else {
         header('Location: /index.php');
     }
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['id_cliente'] = null;
                     }
 
-                    header('Location: /portal-cliente/index.php');
+                    header('Location: /portal-cliente/catalogo.php');
                     exit;
                 }
 
