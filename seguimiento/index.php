@@ -1,7 +1,13 @@
 <?php
 $titulo = "Seguimiento de Pedidos";
 
+require_once '../includes/auth.php';
+requiereRol(['Administrador', 'Empleado']);
 require_once '../config/database.php';
+
+if (empty($_SESSION['token_seguimiento'])) {
+    $_SESSION['token_seguimiento'] = bin2hex(random_bytes(32));
+}
 
 $conexion = Database::getConnection();
 
@@ -83,6 +89,10 @@ include '../includes/sidebar.php';
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
+            <?php if (isset($_GET['error'])): ?><div class="alert alert-danger"><?php
+                $erroresSeguimiento = ['datos_incompletos' => 'No se pudo actualizar: revisa los datos y vuelve a intentarlo.', 'pedido_finalizado' => 'Un pedido entregado o cancelado no se puede modificar.', 'operacion' => 'No se pudo actualizar el estado del pedido.'];
+                echo htmlspecialchars($erroresSeguimiento[$_GET['error']] ?? 'Ocurrió un error al actualizar el pedido.', ENT_QUOTES, 'UTF-8');
+            ?></div><?php endif; ?>
 
             <!-- TARJETA PRINCIPAL -->
             <div class="dashboard-card mb-4">
@@ -134,7 +144,7 @@ include '../includes/sidebar.php';
                                                 <a href="detalle.php?id=<?= $p['id_pedido'] ?>" class="btn btn-sm btn-outline-secondary" title="Ver Historial">
                                                     <i class="bi bi-eye"></i> Detalle
                                                 </a>
-                                                <button type="button" 
+                                                <?php if (!in_array(mb_strtolower((string) ($p['estado'] ?? '')), ['cancelado', 'entregado'], true)): ?><button type="button"
                                                         class="btn btn-sm btn-chiquis btn-modal-estado" 
                                                         data-id="<?= $p['id_pedido'] ?>" 
                                                         data-estado="<?= $p['id_estado'] ?>"
@@ -143,7 +153,7 @@ include '../includes/sidebar.php';
                                                         data-toggle="modal" 
                                                         data-target="#modalCambiarEstado">
                                                     <i class="bi bi-pencil-square"></i> Cambiar Estado
-                                                </button>
+                                                </button><?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
@@ -169,6 +179,7 @@ include '../includes/sidebar.php';
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <form action="cambiar_estado.php" method="POST">
+                <input type="hidden" name="token" value="<?= htmlspecialchars($_SESSION['token_seguimiento'], ENT_QUOTES, 'UTF-8') ?>">
                 
                 <div class="modal-header" style="background-color: #EC4899; color: #ffffff;">
                     <h5 class="modal-title" id="modalCambiarEstadoLabel">
@@ -183,7 +194,7 @@ include '../includes/sidebar.php';
                     <div class="mb-3">
                         <label for="modal_id_estado" class="form-label fw-bold">Nuevo Estado:</label>
                         <select name="id_estado" id="modal_id_estado" class="form-select form-control" required>
-                            <?php foreach ($estados as $est): ?>
+                            <?php foreach ($estados as $est): if ($est['nombre'] === 'Cancelado') continue; ?>
                                 <option value="<?= $est['id_estado'] ?>"><?= $est['orden'] ?>. <?= htmlspecialchars($est['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
