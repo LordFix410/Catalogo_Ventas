@@ -6,7 +6,10 @@ if (!$id || $id < 1) { header('Location: index.php'); exit; }
 $filas = productosEjecutar($conexion, 'CALL sp_producto_obtener(?)', 'i', [$id]);
 if (!$filas) { header('Location: index.php?error=no_encontrado'); exit; }
 $producto = $filas[0]; $categorias = productosCategorias($conexion); $error = '';
+if (empty($_SESSION['token_producto_estado'])) $_SESSION['token_producto_estado'] = bin2hex(random_bytes(32));
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'reactivar' && !(bool) $producto['activo']) {
+    $token = $_POST['token'] ?? '';
+    if (!is_string($token) || !hash_equals($_SESSION['token_producto_estado'], $token)) { header('Location: index.php?error=solicitud'); exit; }
     productosEjecutar($conexion, 'UPDATE productos SET activo = 1 WHERE id_producto = ?', 'i', [$id]);
     header('Location: index.php?msg=restaurado');
     exit;
@@ -40,6 +43,6 @@ productosEncabezado('Editar producto','productos');
 <div class="col-md-4"><label class="form-label" for="imagen">Cambiar imagen</label><input class="form-control" type="file" id="imagen" name="imagen" accept="image/jpeg,image/png,image/webp,image/gif"><div class="form-text">Deja vacío para conservar la actual. Máximo 5 MB.</div></div>
 <?php if (!empty($producto['imagen'])): ?><div class="col-12"><span class="form-label d-block">Imagen actual</span><img src="/<?= productosEsc($producto['imagen']) ?>" alt="<?= productosEsc($producto['nombre']) ?>" style="max-width:220px;max-height:180px;object-fit:contain;border-radius:12px"></div><?php endif; ?>
 </div><div class="d-flex flex-wrap justify-content-between gap-2 mt-4"><div><?php if (!(bool) $producto['activo']): ?><button type="submit" form="formReactivarProducto" class="btn btn-success"><i class="bi bi-arrow-counterclockwise me-1"></i>Reactivar producto</button><?php endif; ?></div><div class="d-flex gap-2"><a href="index.php" class="btn btn-outline-secondary">Cancelar</a><button class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Guardar cambios</button></div></div></form>
-<?php if (!(bool) $producto['activo']): ?><form method="post" id="formReactivarProducto"><input type="hidden" name="id" value="<?= (int) $id ?>"><input type="hidden" name="accion" value="reactivar"></form><?php endif; ?>
+<?php if (!(bool) $producto['activo']): ?><form method="post" id="formReactivarProducto"><input type="hidden" name="id" value="<?= (int) $id ?>"><input type="hidden" name="accion" value="reactivar"><input type="hidden" name="token" value="<?= productosEsc($_SESSION['token_producto_estado']) ?>"></form><?php endif; ?>
 </div></div></div></div>
 <?php productosPie(); ?>
